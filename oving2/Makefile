@@ -30,7 +30,7 @@ all: bin/CliServ
 
 bin/CliServ: obj/CliServ.o ${COMMON_OBJ}
 	mkdir -p bin
-	${CC} ${LDFLAGS$} ${DEBUG} -o $@ $^
+	${CC} ${DEBUG} -o $@ ${LDFLAGS} $^
 
 obj/%.o: src/%.c include/%.h 
 	mkdir -p obj
