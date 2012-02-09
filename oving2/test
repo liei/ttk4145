@@ -1,0 +1,6 @@
+#!/bin/bash
+
+gnome-terminal -x bin/server
+gnome-terminal -x bin/client client1
+gnome-terminal -x bin/client client2
+gnome-terminal -x bin/client client3
