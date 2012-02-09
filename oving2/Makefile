@@ -7,30 +7,28 @@ CC = gcc
 INCLUDEPATH=\
     -Iinclude\
 
-LIBS+= -lpthread -lm
+LIBS+= -lm
 
-LDFLAGS+= ${LIBS}
+LDFLAGS+= ${LIBS} -pthread
 
-CFLAGS+= -Wall -std=c99 -D_POSIX_C_SOURCE ${INCLUDEPATH}
+CFLAGS+= -Wall --std=c99 -D_POSIX_C_SOURCE=199309L ${INCLUDEPATH} 
 
-COMMON_OBJ+= obj/cJSON.o obj/messages.o obj/queue.o 
+COMMON_OBJ+= obj/cJSON.o obj/messages.o obj/queue.o obj/util.o
 
 # Targets:
 
 # Do everything by default, if it isn't done already
 #all: bin/server bin/client bin/CliServ $(filter-out $(wildcard bin), bin) $(BIN_FILES) 
 
-all: bin/CliServ
+all: bin/server bin/client
 
-#bin/server server.o ${COMMON_OBJ}
-#	${CPP} ${LIBFLA$} ${DEBUG} -o $@ $^ 
-
-#bin/client client.o ${COMMON_OBJ}
-#	${CPP} ${LIBFLA$} ${DEBUG} -o $@ $^ 
-
-bin/CliServ: obj/CliServ.o ${COMMON_OBJ}
+bin/server: obj/server.o ${COMMON_OBJ}
 	mkdir -p bin
-	${CC} ${DEBUG} -o $@ ${LDFLAGS} $^
+	${CC} ${DEBUG} -o $@ $^ ${LDFLAGS} 
+
+bin/client: obj/client.o ${COMMON_OBJ}
+	mkdir -p bin
+	${CC} ${DEBUG} -o $@ $^ ${LDFLAGS}
 
 obj/%.o: src/%.c include/%.h 
 	mkdir -p obj
@@ -40,4 +38,3 @@ clean:
 	if [ -e obj ]; then rm -r obj; fi
 purge: clean
 	if [ -e bin ]; then rm -r bin; fi
-

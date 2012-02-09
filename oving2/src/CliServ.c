@@ -1003,55 +1003,45 @@ void* ClientThreadFunc(void * pargs)
 
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv){
 
-	CLIENT_DESCRIPTOR	cli1;
+  CLIENT_DESCRIPTOR cli1;
 
-	pthread_t			hsrv, hcli1;
+  pthread_t hsrv, hcli1;
+  
+  if(argc != 2) {
+    printf("Error: Start the application like this:\n\t" 
+	   "\"./Ex2-ChatClientServer SERVER\" if it is the SERVER or\n\t" 
+	   "\"./Ex2-ChatClientServer username\" if it is the CLIENT.\n");
+    return 1;
+  }
 
-	if(argc != 2)
-	{
-		printf("Error: Start the application like this:\n\t\"./Ex2-ChatClientServer SERVER\" if it is the SERVER or\n\t\"./Ex2-ChatClientServer username\" if it is the CLIENT.\n");
-		return 1;
-	}
+  // VERY IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // Socket failures generate SIGPIPE signal when issuing a send() call
+  // which will crash your application if you don have a signal handler
+  // We won't implement a signal handler, so we'll just tell the OS to ignore the signal!
+  // The same can be achieved by setting MSG_NOSIGNAL flag in send() call like this
+  // send(sck, data, len, MSG_NOSIGNAL)
+  signal(SIGPIPE, SIG_IGN);
 
-	// VERY IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// Socket failures generate SIGPIPE signal when issuing a send() call
-	// which will crash your application if you don have a signal handler
-	// We won't implement a signal handler, so we'll just tell the OS to ignore the signal!
-	// The same can be achieved by setting MSG_NOSIGNAL flag in send() call like this
-	// send(sck, data, len, MSG_NOSIGNAL)
-	signal(SIGPIPE, SIG_IGN);
-
-	// If the application was started with the command line parameter "SERVER"
-	// Start Server!
-
-	if(!strcmp(argv[1], "SERVER"))
-	{
-		ObjListInit(&g_dlConnectedClients);
-
-
-		pthread_create(&hsrv, NULL, ServerThreadFunc, NULL);
-
-
-	}
-	else
-	{
-		// Else - Start Client with the ClientID/Username fro the command line!
-		strcpy(cli1.strCliName, argv[1]);
-		pthread_create(&hcli1, NULL, ClientThreadFunc, &cli1);
-
-	}
-
-	while(1)
-	{
-		// Loop forever!
-		SleepEx(1000, FALSE);
-	}
-	
-	return 0;
+  // If the application was started with the command line parameter "SERVER"
+  // Start Server!
+  if(!strcmp(argv[1], "SERVER")) {
+    ObjListInit(&g_dlConnectedClients);
+    pthread_create(&hsrv, NULL, ServerThreadFunc, NULL);
+  } else {
+    // Else - Start Client with the ClientID/Username fro the command line!
+    strcpy(cli1.strCliName, argv[1]);
+    pthread_create(&hcli1, NULL, ClientThreadFunc, &cli1);
+  }
+  
+  while(1) {
+    // Loop forever!
+    SleepEx(1000, FALSE);
+  }
+  
+  return 0;
 }

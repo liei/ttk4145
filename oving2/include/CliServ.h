@@ -31,13 +31,13 @@ extern "C"
 #pragma pack(push,1)
 
 
-#define		cli_state_init				1
+#define		cli_state_init			1
 #define		cli_state_create_sck		2
-#define		cli_state_connect			3
-#define		cli_state_connected			4
+#define		cli_state_connect		3
+#define		cli_state_connected		4
 #define		cli_state_waiting_list		5
-#define		cli_state_chat				6
-#define		cli_state_cleanup			7
+#define		cli_state_chat			6
+#define		cli_state_cleanup		7
 
 #define ev_NEW_CLIENT		1
 #define ev_NEW_MESSAGE		2
