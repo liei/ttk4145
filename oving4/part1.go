@@ -28,13 +28,13 @@ func main() {
     	go countdown(i);   
     }
 */
-    channel := make(chan int);
+    channel := make(chan int);  
 
     go gen(channel,10);
     go double(channel);
-
-    endprog := make(chan int);
-    endq := <- endprog;
+    
+    never := make(chan int);
+    <- never;
 
 }
 
@@ -59,7 +59,7 @@ func gen(output chan int, n int){
      	 fmt.Printf("generate: %d\n",i);
      	 output <- i;
      }
-     output <- -1;     
+     output <- -1;
 }
 
 func double(input chan int){
