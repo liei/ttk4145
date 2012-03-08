@@ -20,6 +20,7 @@ void start_routine(void *arg){
   int n = 0;
   printf("start t%d, [n:%d]\n",id,n);
   do{
+	pthread_barrier_wait(&barrier);
 	if(rand() % 10 == 0){
 	  failed++;
 	  printf("failure in t%d\n",id);
