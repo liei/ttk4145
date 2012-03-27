@@ -1,0 +1,14 @@
+2009/12/26:
+I am interested in attempting to provide basic maintainence to this library.
+It seems to have been sitting around for 15 years or so without recieving much
+care. Supposedly, it is useful for a program known as ferret (
+http://ferret.pmel.noaa.gov/Ferret ). I was able to fix up the header file
+a bit and add this autotools buildsystem. I am willing to host a Mercurial
+repository and review and apply patches if people put thought into them and
+submit them.
+
+My motivation is ``distren'', a personal project, for which I would like to utilize
+a generic linked-list library. I am somewhat against reinventing the wheel ;-).
+
+Thus, I bring forth liblist-2.2 (see ChangeLog)
+	-- ohnobinki

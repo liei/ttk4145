@@ -1,0 +1,34 @@
+2011-03-05 Nathan Phillip Brink <ohnobinki@ohnopublishing.net>
+	* liblist-2.4:
+	- Use size_t instead of int for referring to memory lengths.
+	- Doxygen-style documentation and more self-documenting variable names.
+	- Support building DLLs for mingw32 target.
+	- Add convenience list_remove_element() to remove an element identified by its pointer.
+	- Use list_status_t (an enum) instead of #define for LIST_EXTENT, LIST_OK, and LIST_EMPTY.
+	- Update cache example to use the preferred cache_t instead of CACHE *.
+	- Rename manpages llist(3) -> liblist(3), lqueue(3) -> liblist_queue(3), lstack(3) -> liblist_stack(3) and add manpage .so pointers for each documented function and header.
+	- Use lstack_t instead of stack_t to avoid typedef conflicts with Darwin's libc.
+	- Fix handling malloc() returning NULL (one potential segfault and another potential memory leak); thanks to Vincent LE GARREC <legarrec.vincent@gmail.com> for the patch.
+
+2010-05-29 Nathan Phillip Brink <ohnobinki@ohnopublishing.net>
+	* liblist-2.3.1:
+	- #defines to prevent symbol collions such as with libmysqlclient.so ( http://bugs.mysql.com/52725 )
+	- API now uses typedefs instead of macros for types
+	- a very basic testsuite
+	- release 2.3 isn't distributed because it was a dud without the shared object ABI version bump or these changelogs
+
+2009-12-29  Nathan Phillip Brink  <ohnobinki@ohnopublishing.net>
+
+	* liblist-2.2.1:
+	- Fixed parallel build issue with LaTeX (to please flameeyes ;-) ).
+	- Prefixed manpages with `l' to avoid collisions with system manpages.
+
+2009-12-26  Nathan Phillip Brink  <ohnobinki@ohnopublishing.net>
+
+	* liblist-2.2:
+	- Modernized function prototypes in the four manpages, header files, and source files.
+	- Added autotools buildsystem to install essential library components; libtool = dynamic lib support.
+	- pkg-config support.
+	- #ifndef #define #endif wrapper for public header files.
+	- Disable macro implementations of functions.
+

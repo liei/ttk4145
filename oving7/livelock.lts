@@ -1,0 +1,9 @@
+SEM = (get[x:1..2] -> rel[x] -> SEM).
+
+P1 = (s1.get[1] -> s3.get[1] -> P1a),
+P1a = (s2.get[1] -> s1.rel[1] -> s2.rel[1] -> s3.rel[1] -> P1 | s3.rel[1] -> s3.get[1] -> P1a).
+P2 = (s2.get[2] -> s3.get[2] -> P2a),
+P2a = (s1.get[2] -> s1.rel[2] -> s2.rel[2] -> s3.rel[2] -> P2 | s3.rel[2] -> s3.get[2] -> P2a).
+
+
+||SYS = (P1 || P2 || s1:SEM || s2:SEM || s3:SEM).

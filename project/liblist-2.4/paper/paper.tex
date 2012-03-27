@@ -1,0 +1,805 @@
+% paper.tex -- paper to describe the list package design and evolution.
+%
+% Bradley C. Spatz, Univesity of Florida, bcs@ufl.edu
+% Last edited: Thu Dec 19 15:13:27 1991 by bcs (Bradley C. Spatz) on bigguy
+%
+\documentclass[fullpage,11pt]{article}
+\usepackage{graphicx}
+
+\begin{document}
+\pagestyle{empty}
+\begin{center}
+\LARGE{
+\ \\
+\ \\
+\ \\
+The {\tt list(3)} Package:\\
+Software Design and Reusability
+}
+
+\bigskip
+\bigskip
+\large{
+Bradley C. Spatz\\
+Computer \& Information Sciences\\
+E301 CSE\\
+University of Florida\\
+Gainesville, FL 32611\\
+904/392-1200\\
+bcs@ufl.edu
+
+\bigskip
+\today
+}
+\end{center}
+
+\vspace{1in}
+\begin{quote} \begin{quote} \begin{quote}
+\begin{centering}
+{\bf Abstract}\\
+\end{centering}
+\medskip
+This paper describes the design, evolution, and application of a reusable
+software package that implements the ubiquitous doubly-linked list.  The
+motivations and design of the package are discussed.  In particular, issues
+of data abstraction, memory management, and performance are considered.
+\medskip\\
+Examples of the package's direct application towards implementing queues and
+stacks is then presented.  A more indirect application towards the
+construction of a generic cache package follows.  Finally, a performance
+analysis is presented, along with some reflections and a summary.
+\end{quote} \end{quote} \end{quote}
+
+\vspace{.5in}
+\begin{quote} \begin{quote} \begin{quote}
+{\bf Keywords and Phrases:} Design, Reusability, Data Abstraction, Memory
+Management, Linked List, Queue, Stack, Cache.
+\end{quote} \end{quote} \end{quote}
+
+\newpage
+\tableofcontents
+\bigskip
+\listoffigures
+\bigskip
+\listoftables
+
+
+\newpage
+\pagestyle{plain}
+\setcounter{page}{1}
+\section{Why a List Package?}
+After finally chasing down that last errant pointer to Venus in yet another
+group of stack routines for a particular program, I decided to implement,
+once and for all, a generic, reusable stack package.  Later in the program's
+development, I needed a queue, so I decided to write a queue package in the
+spirit of the previous stack package.
+
+While coding the queue package, I realized my code was almost identical to the
+stack code.  Being caught up in the fervor of my decision to write these
+packages such that I would {\em never} have to write them again, I had
+forgotten about the fundamental data structure that underlies both stacks and
+queues -- the linked list.
+
+Still resolved to ``do this right, once and for all,'' I began to write a
+generic, reusable linked list package that I could use to implement the stack
+and queue I needed.  What resulted was a fruitful exercise in software design
+and reusablility that I had not anticipated.  And as a windfall, I got a set
+of good library routines that I would use for a long time.
+
+
+\section{The List Design}
+Since I wanted a set of of routines that I could use for any purpose
+whatsoever, I needed to implement the most flexible and applicable style of
+linked list possible.  Accordingly, I chose to implement a doubly-linked,
+double-ended list.  The double links would allow movement forwards and
+backwards in the list, and the double ends would allow direct access to the
+front and rear elements of the list, which are usually considered special
+elements.  I also wanted to keep track of the ``current'' element, so various
+operations would have some context to use in their operation.  Finally, I
+wanted to keep track of the number of elements in the list.  Figure
+\ref{fig:list} shows the resulting model of the list.
+
+\begin{figure}[h]
+\begin{center}
+	\includegraphics{list.0}
+	\caption{List descriptor and list elements.}
+	\label{fig:list}
+\end{center}
+\end{figure}
+
+Since resuability was the primary goal, I decided to implement the package in
+the C language, since it is widely used and readily supports data and
+functional abstractions.
+
+\subsection{Data Abstraction}
+The key to insuring that the routines would be resuable was to design an
+efficient model of data abstraction.  This would allow the routines to operate
+on lists composed of {\em any} type of data.  To accomodate this, no
+assumptions could be made about the data stored at each node.  So in addition
+to the references to the previous and next nodes, a simple reference to the
+data would be required in the data structure for each list element.  Figure
+\ref{ds} shows the C code for the list element and descriptor.
+
+\begin{figure}[t]
+\begin{verbatim}
+          /* Each list element. */             /* List descriptor. */          
+          struct list_element_t {              struct list_t {
+             struct list_element_t *prev;         int                   size;
+             struct list_element_t *next;         struct list_element_t *front;
+             char                  *data;         struct list_element_t *rear;
+          };                                      struct list_element_t *curr;
+                                                 };
+\end{verbatim}
+\caption{C code for the list element and descriptor.}
+\label{ds}
+\end{figure}
+
+I considered adding a field in the list element structure that recorded the
+size, in bytes, of the data referenced, but decided this was unneccessary.
+Furthermore, this would violate my goal of data abstraction; I did not want
+the list package to know {\em anything} about the data stored at each node.
+If the user needed to know the size of the data, then they could record this
+themselves.  Lastly, making no assumptions on the data allowed a single list
+to contain elements that could vary in size, although the responsibility for
+managing this variability was now explicitly with the user.
+
+These structures were then {\tt typedef}'d to be {\tt LIST\_ELEMENT} and
+{\tt LIST}, respectively, although only {\tt LIST} is available to the user.
+
+\subsection{Instantiation}
+For maximum flexibility, I wanted the list routines to operate upon multiple
+lists concurrently.  Thus, the list routines would require a list descriptor
+to specify the list upon which to operate.  Routines to allocate and
+deallocate lists were thus needed.  The C functions
+\begin{quote}
+\begin{verbatim}
+LIST *list_init();
+void list_free(LIST *list);
+\end{verbatim}
+\end{quote}
+were designed to allocate and deallocate lists.  Upon success,
+{\tt list\_init} will return a list descriptor, or NULL if a new list can not
+be allocated.  {\tt list\_free} will go through {\em list}, deallocating any
+elements remaining,  and deallocate {\em list} itself.
+
+\subsection{Insertion and Removal}
+Insertions can occur at the front, interior, or rear of the list.  Since we
+should be able to move directly to the front or rear of the list, we treat
+only insertions to the interior here.  For flexibility, we allow insertions to
+be specified in relation to the current element.  Thus, the routines:
+\begin{quote}
+\begin{verbatim}
+char *list_insert_before(LIST *list, char *data, int bytes);
+char *list_insert_after(LIST *list, char *data, int bytes);
+\end{verbatim}
+\end{quote}
+insert an element before or after the current element.  Once inserted, the new
+element is then considered the current element.  The data to be inserted is
+referenced by {\em data} and should be of length {\em bytes}.  Both routines
+return a pointer to the newly inserted element.
+
+Our choice not to implement dedicated routines to insert at the front and rear
+of the list should not constrain us.  In fact, as we'll see later, the ability
+to maintain state in terms of the current element will allow us to create more
+complex data models using the list as a foundation.
+
+Note that the interface described above allows us to insert data of any size
+and structure in the list.  Only the location and size of the data is
+specified.  The package knows nothing about the data itself and simply copies
+the data into a list element; only the list elements, and not the data
+contained within is managed by the package.
+
+To remove elements from a list the following routines are used:
+\begin{quote}
+\begin{verbatim}
+char *list_remove_front(LIST *list);
+char *list_remove_curr(LIST *list);
+char *list_remove_rear(LIST *list);
+\end{verbatim}
+\end{quote}
+These routines simply disassociate the element from the list and return
+a pointer to the data previously stored.  The routines return NULL if
+{\em list} is empty.  The current element is set to the next element in
+the list, unless the element removed was at the end of the list.  In this
+case, the previous element becomes the current element.
+
+Additionally, the routines
+\begin{quote}
+\begin{verbatim}
+char *list_front(LIST *list);
+char *list_curr(LIST *list);
+char *list_rear(LIST *list);
+\end{verbatim}
+\end{quote}
+return pointers to the data portions of the front, current, and rear elements
+in the list.
+
+\subsection{Memory Management}
+At this point, it may be clear that the interfaces to the insertion
+and removal routines imply a single, and possibly inconvenient, memory
+management policy.  Specifically, the insertion routines will always
+copy the data described by {\em data} and {\em bytes} into the list.  In
+many applications, this induced copying may not be convenient or efficient.
+
+For instance, if the data to be inserted has already been copied into a
+structure that the user has previously allocated, the copy incurred by the
+insert routines will be wasteful.  For these cases, we'd like to be able to
+use the storage the user has already allocated.
+
+In order to support this, we can allow the parameter {\em bytes} to be set to
+zero.  This will indicate to the insert routines not to copy the data
+described by {\em data}, but merely to add the reference {\em data} to the
+list.  This will allow the user to control the memory allocation policy.  For
+cases like those described above, we'll also experience a performance benefit.
+
+However, this new functionality has implications upon the {\tt list\_free}
+routine.  As we have seen, {\tt list\_free} will deallocate the data portion
+of any elements remaining on the list to be freed.  Consider the scenario
+where a user has been inserting the following structure into the list
+\begin{quote}
+\begin{verbatim}
+struct node_t {
+   int     height;
+   int     width;
+   grid_t *grid;
+}
+\end{verbatim}
+\end{quote}
+which they have been allocating themselves (i.e. using {\em bytes}=0 with
+{\tt list\_insert}).
+
+If {\tt list\_free} is called on a non-empty list, {\tt list\_free} will
+attempt to deallocate the data portion of each element, which in this case
+will be of type {\tt node\_t}.  Although the deallocation will proceed without
+error, the data referenced by {\tt grid} will never be deallocated.  This will
+occur because the list package knows nothing about the data stored at each
+node.  What we're left with is a memory leak that may lead to eventual
+failure.
+
+If we are going to allow the user to control the memory allocation policy,
+then we'll have to allow the user to control the deallocation policy as well.
+To support this, we'll modify {\tt list\_free} as follows:
+\begin{quote}
+\begin{verbatim}
+   void list_free(LIST *list, void (*dealloc)());
+\end{verbatim}
+\end{quote}
+Thus, we'll allow the user to provide their own deallocation routine that we
+can apply to each element.  {\em Dealloc} should be a pointer to a function of
+the following form:
+\begin{quote}
+\begin{verbatim}
+   void dealloc(char *data);
+\end{verbatim}
+\end{quote}
+For each element remaining in the list, {\em dealloc} will be called with {\em
+data} pointing to the data portion of the element to be deallocated.  As
+usual, the package will be responsible for deallocating the element itself.
+If {\em dealloc} is LIST\_DEALLOC, then the package will apply its own
+deallocation policy.  If the user has completely managed memory, then the user
+may wish to avoid calling any deallocation function on each remaining element.
+For this reason, {\em dealloc} may be specified as LIST\_NODEALLOC.  This is
+useful if the user has block allocated and deallocated memory on their own,
+such that no individual element deallocation need be performed.
+
+Although the package now supports a flexible, user-controlled memory policy,
+it is still the responsibility of the user to ensure that a consistent
+allocation/deallocation policy is applied.
+
+\subsection{Movement and Traversals}
+Because the list is doubly linked, we want to be able to move to the previous
+or next element from the current element.  Additionally, since the list is
+double-ended, we want to easily move to the front or rear of the list.  For
+these reasons, the functions
+\begin{quote}
+\begin{verbatim}
+   LIST *list_mvprev(LIST *list);
+   LIST *list_mvnext(LIST *list);
+   LIST *list_mvfront(LIST *list);
+   LIST *list_mvrear(LIST *list);
+\end{verbatim}
+\end{quote}
+are provided.  Each returns a pointer to the modified list
+descriptor\footnote{Since the list's current element, and thus the list, is
+modified.}.
+
+Although these routines can be used to traverse the list forwards from the
+front or backwards from the rear, a convenience routine, {\tt list\_traverse}
+was designed as follows
+\begin{quote}
+\begin{verbatim}
+   int list_traverse(LIST *list, char *data, int (*func)(), int opts);
+\end{verbatim}
+\end{quote}
+The parameters are {\em list}, the list to traverse; {\em data}, an
+unrestricted pointer to user-supplied data; {\em func}, a user-supplied
+function to be applied to each element in the traversal; and {\em opts}, a
+bit-coded set of options that control the behavior of the traversal.
+{\em Func} should be declared as follows:
+\begin{quote}
+\begin{verbatim}
+   int func(char *data, char *curr);
+\end{verbatim}
+\end{quote}
+At each element encountered in the traversal, {\tt list\_traverse} will invoke
+{\em func}, passing it the two parameters {\em data} and {\em curr}; {\em
+data} being the user-supplied data pointer sent to {\tt list\_traverse}
+originally, and {\em curr} being the data pointer of the current element in
+the traversal.  {\em Func} should be coded so as to return TRUE if the
+traversal should continue or FALSE if the traversal should terminate.
+
+For example, by passing the following function to {\tt list\_traverse},
+\begin{quote}
+\begin{verbatim}
+   int func(char *data, char *curr)
+   {
+      printf(``Name = %s\n'', curr);
+      return(TRUE);
+   }
+\end{verbatim}
+\end{quote}
+the contents of a list of names could be printed.  In this example, the
+parameter {\em data} is ignored and the function unconditionally returns TRUE.
+This is possible because {\em func} does not need to check for the extent of
+the list.  The return code from {\tt list\_traverse} will indicate if the
+extent of the list was reached during the traversal; LIST\_EMPTY for an empty
+list, LIST\_OK if the traversal terminated as per {\em func}'s return code,
+and LIST\_EXTENT if the extent of the list was reached.  A function like
+\begin{quote}
+\begin{verbatim}
+   int func(char *data, char *curr)
+   {
+      if (strcmp(data, curr) < 0)
+         return(TRUE);
+      else
+         return(FALSE);
+   }
+\end{verbatim}
+\end{quote}
+can be used to position the current element prior to insertion, thus keeping
+the list of names sorted.
+
+The direction and scope of the traversal can be controlled by specifying one
+or more options summarized in Table \ref{opts}.
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{|l|l|} \hline
+{\em Option} & {\em Description} \\ \hline \hline
+LIST\_FORW\dag     & traverse forward (next) \\ \hline
+LIST\_BACK         & traverse backward (prev) \\ \hline
+LIST\_FRNT\dag     & start from the front (implies LIST\_FORW) \\ \hline
+LIST\_CURR         & start from the current element \\ \hline
+LIST\_REAR         & start from the rear element (implies LIST\_BACK)\\ \hline
+LIST\_SAVE\dag     & do not alter the current element \\
+                   & pointer during the traversal \\ \hline
+LIST\_ALTR         & alter the current element pointer \\
+	           & during the traversal \\ \hline
+\end{tabular}
+\caption{Options for {\tt list\_traverse}.  \dag \ indicates a default.}
+\label{opts}
+\end{center}
+\end{table}
+These options can be combined with the logical OR operator, but at least one
+value must be specified.  For example, specifying LIST\_FORW for {\em opts}
+would request a traversal forwards from the front of the list, restoring the
+current element pointer to the value prior to invocation.  A more complex set
+of options, such as
+\begin{quote}
+\begin{verbatim}
+(LIST_BACK | LIST_CURR | LIST_ALTR)
+\end{verbatim}
+\end{quote}
+would request a traversal backwards from the current position, altering the
+current element pointer during the traversal.
+
+Care must be taken if {\em func} calls list routines that make use of the
+current element pointer context.  In these cases, LIST\_ALTR must be specified.
+
+\subsection{Improving Performance}
+At this point, we have routines to create and delete lists, insert and remove
+elements, reference the data in each element, and traverse lists in a flexible
+and generalized way.  Along the way, we have provided some convenience
+routines that have caused us to divert from the simplicity of providing
+mechanism and not policy.  In order to reduce the extra weight of these
+convenience routines, and to improve performance overall, we can rewrite some
+of the simpler routines as C pre-processor ({\tt cpp}) macros.  In particular,
+we can target all the data reference routines and most of the movement
+routines.  Two examples of these macros follow:
+\begin{quote}
+\begin{verbatim}
+#define list_curr(l)    (((l)->curr == NULL) ? NULL : ((l)->curr->data))
+#define list_mvfront(l) ((l)->curr = (l)->front, (l))
+\end{verbatim}
+\end{quote}
+Finally, we'd like a routine that returns TRUE if a given list is empty, and
+another routine that returns the number of elements in a list.  These
+routines can be implemented as macros as well:
+\begin{quote}
+\begin{verbatim}
+#define list_empty(l)   (((l)->front == NULL) ? TRUE : FALSE)
+#define list_size(l)    ((l)->size)
+\end{verbatim}
+\end{quote}
+
+\subsection{The Finished Interface}
+Now we have a completed package that will allow data of any size and structure
+to be managed in a list.  We have routines to perform all of the necessary
+manipulations.  We allow the user to control the memory management policy,
+and we have introduced some optimizations and convenience.  Table
+\ref{interface} summarizes the completed interface.
+\begin{table}[h]
+\begin{centering}
+\begin{tabular}{|l|l|l|l|l|l|} \hline
+{\em Instantiation} & {\em Insertion} & {\em Removal} & {\em Movement}
+& {\em Reference} & {\em Status} \\ \hline
+
+list\_init & list\_insert\_before & list\_remove\_front &
+	list\_mvprev   & list\_front\dag & list\_size\dag \\
+list\_free & list\_insert\_after  & list\_remove\_curr  &
+	list\_mvnext   & list\_curr\dag  & list\_empty\dag \\
+           &                      & list\_remove\_rear &
+	list\_mvfront\dag  & list\_rear\dag  &             \\
+           &                      &                    &
+	list\_mvrear\dag   &             &             \\
+           &                      &                    &
+	list\_traverse &             &             \\ \hline
+\end{tabular}
+\caption{Summary of the {\tt list(3)} routines. \dag \ indicates a macro.}
+\label{interface}
+\end{centering}
+\end{table}
+
+\section{Queues and Stacks}
+Beyond the linked list, the two most common data models are the queue and
+stack.  Each can be thought of as a linked list; the queue as a list where new
+elements are enqueued to the end and dequeued elements are taken from the
+front, and the the stack as a list where elements are added and removed from
+the front.  We should be able to implement each in terms of our list routines,
+and in fact, doing so should be a good test of our list package design.
+\subsection{Our Friend, {\tt cpp}}
+It turns out that we can implement a set of basic queue and stack primitives
+directly in terms of our list routines.  Since the mapping is direct, we can
+use the C pre-processor to provide macros that will perform the
+mapping.  Table \ref{mappings} summarizes the mappings.  We can also provide
+macros that map the LIST structure into a QUEUE and STACK data structure, thus
+totally hiding the underlying list-based implementation.
+\begin{table}[t]
+\begin{centering}
+\begin{tabular}{|l|l|l|} \hline
+{\em Queue Routine} & {\em {\tt list} Routine} & {\em Stack Routine} \\ \hline \hline
+q\_init             & list\_init	       & stack\_init  \\ \hline
+q\_enqueue          & list\_insert\_after      &              \\ \hline
+                    & list\_insert\_before     & stack\_push  \\ \hline
+q\_dequeue          & list\_remove\_front      & stack\_pop   \\ \hline
+q\_front            & list\_front	       & stack\_front \\ \hline
+q\_size             & list\_size	       & stack\_size  \\ \hline
+q\_empty            & list\_empty	       & stack\_empty \\ \hline
+q\_free             & list\_free	       & stack\_free  \\ \hline
+\end{tabular}
+\caption{Queue and stack routine mappings to the {\tt list(3)} library.}
+\label{mappings}
+\end{centering}
+\end{table}
+Effectively, we now have two new packages that are in turn generic and
+embody of all of features we designed into the list package, including
+data abstraction and a flexible memory management policy.
+
+Note the implicit use of the current element pointer for both the queue and
+stack.  For the queue, the current element is always at the end of the list,
+so we can use {\tt list\_insert\_after} to enqueue elements to the end of the
+list.  For the stack, we keep the current element pointer at the front of the
+list, which is where we push and pop elements.
+
+From the user's perspective, all that is required is to include a header file
+(that contains the respective macros) and then compile with the list library.
+If we write separate man pages for the new queue and stack packages, we
+now have three complete packages.
+
+
+\section{A Cache Package}
+Implementing queues and stacks was easy since the new routines could be
+expressed directly in terms of the list routines.  However, other data models
+can be implemented quite easily as well, even if their primitives cannot be
+mapped directly onto our list routines.
+
+To illustrate such a construction, we will attempt to implement a generic
+cache that uses the list routines as a foundation.  If we design our cache
+model wisely, we should need to write only a minimal set of code to exploit
+what functionality our list package already provides.
+
+Following the design of our list routines, we'd like a set of routines to
+allocate and deallocate a cache.  We'll need a routine to add an element to a
+cache and another to check for an element in a cache.  Since caches exploit
+some form of locality, we'd like our cache to be of a maximum fixed size, so
+that we keep only ``recent'' elements in the cache.  With these design goals
+in mind, we can think of the cache as a linked list.  We'll add new elements
+to the front of the list and remove old elements from the end of the list when
+we need to, in order to maintain our maximum size.
+
+Given these specifications, we can describe a cache with a LIST descriptor,
+using one additional field to record the maximum number of
+elements for the cache.  The C data structure for a cache descriptor is
+shown below.
+\begin{quote}
+\begin{verbatim}       
+typedef struct cache_t {
+   int  max_elements;
+   LIST *list;
+} CACHE;
+\end{verbatim}
+\end{quote}
+
+\newpage
+The implementation of a routine to create a cache should then be easy.  All we
+need to do is allocate a cache descriptor, initialize the current and maximum
+element fields, and allocate a list through the list package.  The code for
+{\tt cache\_init} follows:
+\begin{quote}
+\begin{verbatim}
+CACHE *cache_init(int max_elements)
+{
+   CACHE *new_cache=NULL;
+
+   if ((new_cache = (CACHE *) malloc(sizeof(CACHE))) == NULL)
+      return(NULL);
+   new_cache->max_elements = max_elements;
+   if ((new_cache->list = list_init()) == NULL) {
+      free(new_cache);
+      return(NULL);
+   }
+   return(new_cache);
+}
+\end{verbatim}
+\end{quote}
+If either allocation fails, we'll return NULL.  Otherwise we'll return a valid
+cache descriptor.  The deallocation routine is even simpler since we can use
+the list package to dispose of the list.  We can even support the
+user-controlled memory-management policy by passing {\em dealloc} through to
+the list routine.
+\begin{quote}
+\begin{verbatim}
+void cache_free(CACHE *cache, void (*dealloc)())
+{
+   list_free(cache->list, dealloc);
+   free(cache);
+}
+\end{verbatim}
+\end{quote}
+
+Next, we need to implement a routine to add an element to a cache.  We use the
+same flexible semantics that we used for the list, queue, and stack routines.
+However, since adding a new element to an already full cache may force the
+removal of an existing element\footnote{Since we want to maintain a maximum
+cache size.}, we should probably return a pointer to any removed element.
+Thus, the following routine implements {\tt cache\_enter}:
+\begin{quote}
+\begin{verbatim}
+char *cache_enter(CACHE *cache, char *data, int bytes, char **removed)
+{
+   char *new_element;
+
+   *removed = NULL;
+   new_element = list_insert_before(cache->list, data, bytes);
+   if (new_element != NULL) {
+      if (list_size(cache->list) > cache->max_elements)
+         *removed = list_remove_rear(cache->list);
+   }
+   return(new_element);
+}
+\end{verbatim}
+\end{quote}
+We maintain the list's current element pointer at the front of the list, so we
+can add the new element with {\tt list\_insert\_before}.  If the insert
+succeeds, we check to see if the cache is full and if so, remove the element
+at the rear.  As we'll see, this behavior, in conjunction with that of the
+next routine, will translate to a Least Recently Used (LRU) replacement
+policy.  All that's left is a routine to check for an element in a cache, and
+if found, return a reference to the data stored in the element.
+
+\subsection{Exploiting {\tt list\_traverse}}
+To check for an element in a cache, we can search forwards from the front of
+the list until we find what we're looking for or reach the end of the list.
+As with the list package, we make no assumptions about the data stored in the
+cache, so the user will have to supply a matching function.  This function
+should indicate whether or not to continue the search.
+Fortunately, we've already seen this scenario of traversing a list based upon
+unseen data stored in each element.  Here's where we can apply the {\tt
+list\_traverse} function described earlier.
+\begin{quote}
+\begin{verbatim}
+char *cache_check(CACHE *cache, char *data, int (*match)())
+{
+   char *found;
+
+   if (list_empty(cache->list))
+      return(NULL);
+   if (list_traverse(cache->list, data, match,
+	             (LIST_FRNT|LIST_FORW|LIST_ALTR)) == LIST_OK) {
+      if (list_curr(cache->list) != list_front(cache->list)) {
+         found = (char *) list_remove_curr(cache->list);
+         list_mvfront(cache->list);
+         list_insert_before(cache->list, found, 0);
+         return(found);
+      }
+      else
+         return(list_front(cache->list));
+   }
+   else {
+      list_mvfront(cache->list);
+      return(NULL);
+   }
+}
+\end{verbatim}
+\end{quote}
+
+We can use {\tt list\_traverse} to search the list for the element desired,
+using {\em func} as our matching function.  The only difference here is that
+the function should now return FALSE if a match occurs, since returning TRUE
+requests that the traversal continue.  If OK is returned, indicating that the
+extent of the list was not reached, we know we found a match.  Since we used
+LIST\_ALTR, the current element now points to the matching element.  We can
+then promote that element to the front of the list if it's not already there,
+by removing the element, moving to the front, and inserting it there.  This
+behavior generates an LRU replacement policy.  Note that in performing the
+promotion, we call {\tt list\_insert\_before} with {\em bytes}=0, since the
+storage for the element has already been allocated.
+
+We could easily implement a few convenience routines\footnote{To return the
+current number of cache elements, for example.}, but the existing set of
+routines implement a generic cache and serve as a good illustration of a more
+complex application of the list package.  Note, however, that we now have a
+generic cache package that embodies all the features of the list package.  And
+since the implementation uses the list library, the package is likely to be
+more robust than if we had coded a dedicated set of routines.
+
+
+\section{Reassessing Performance}
+To return to the issue of performance, there is no doubt the flexibility and
+reusability has cost us some execution performance.  In particular, the
+required reference indirection for each data element access, as opposed to
+data stored by value, as well as the overhead of maintaining extra pointers
+as a function of the double list links, consumes some execution time.
+
+In order to assess these costs, various tests were performed\footnote{Tests
+performed on a Sony 800 series workstation: dual 68020 processors, 68881
+coprocessor, 8M memory under NEWS/OS 4.1 (a 4.3BSD variant).  Benchmarks
+compiled with {\tt gcc} 1.37.1.}.  Table \ref{performance} sumarizes the
+results.  In the first two tests, a single integer was pushed and immediately
+popped from a stack 500,000 times.  In test 0, the list library's stack
+abstraction was used whereas test 1 used a dedicated stack library with
+similar semantics.  Both tests measured the time from {\tt list\_init} to {\tt
+list\_free}.  As expected, the dedicated package performed better by 24.1\%
+since the dedicated library has a simpler data structure to manage.  Test 2
+was performed similarly with the list library, except that only integer
+references were stored\footnote{i.e.  by calling the {\tt list\_insert}
+routines with {\em bytes}=0.}.  The 26.6\% difference represents the memory
+allocation overhead in the first test.
+
+\begin{table}[t]
+\begin{center}
+\begin{tabular}{|r|l|r|r|} \hline
+{\em \#} & {\em Test Description} & {\em Iterations} & {\em CPU clicks} \\ 
+	\hline \hline
+0 & push/pop's with {\tt list} library                 & 500K & 3762 \\ \hline
+1 & push/pop's with {\tt stack} library                & 500K & 2855 \\ \hline
+2 & push/pop's, no data allocation, {\tt list} library & 500K & 2763 \\ \hline
+3 & 100-element lists with package [de]allocation      &   5K & 3724 \\ \hline
+4 & 100-element lists with user (block) [de]allocation &   5K & 2491 \\ \hline
+5 & 5-element list traversal with {\tt list\_traverse} & 100K &  510 \\ \hline
+6 & 5-element list traversal with user's traversal     & 100K &  486 \\ \hline
+7 & {\tt list\_mvfront}'s no macro                     & 500K &  221 \\ \hline
+8 & {\tt list\_mvfront}'s as macro                     & 500K &  107 \\ \hline
+\end{tabular}
+\caption{Summary of performance tests with integer elements.}
+\label{performance}
+\end{center}
+\end{table}
+
+To further investigate the performance of varying memory management policies,
+tests 3 and 4 created 100-element lists of integers and then deallocated them
+with {\tt list\_free}.  This was performed 100,000 times.  For test 3, each
+element (integer) was allocated and deallocated by the package whereas test 4
+implemented its own policy: all 100 integers were allocated with
+\begin{quote}
+\begin{verbatim}
+int *ip;
+ip = (int *) malloc(100 * sizeof(int));
+\end{verbatim}
+\end{quote}
+For each of the 100 insertions, {\tt ip} was simply incremented and used as
+the data reference.  To deallocate all 100 integers, a single call to {\tt
+free} was made and LIST\_NODEALLOC was used for {\em dealloc} in the call to
+{\tt list\_free}.  As Table
+\ref{performance} indicates, this block allocation/deallocation policy
+afforded a 33.1\% performance benefit.
+
+Tests 5 and 6 were designed to analyze the convenience routine {\tt
+list\_traverse} versus a dedicated user-supplied traversal.  For both tests, a
+5-element integer list was constructed.  The tests measured the CPU clicks
+used to traverse the list front to back.  This was performed 100,000 times in
+each test.  Test 5 employed {\tt list\_traverse} whereas test 6 used a
+user-supplied traversal.  Both traversals applied a ``dummy'' function that
+performed no computation at each element.  Although the user-supplied
+traversal was faster, the margin was only 4.71\%.  This is because {\tt
+list\_traverse} can use its knowledge of the list data structures directly,
+whereas the user-supplied traversal can only use the list routines.
+
+Finally, tests 7 and 8 gave a quantitative evaluation of the expected speedup
+from using various {\tt cpp} macros.  The macros accounted for a 51.6\%
+speedup.  In each test, only the 500,000 invocations of {\tt list\_mvfront}
+were measured.
+
+Although the tests show that custom implementations are somewhat quicker, the
+resulting speed is at the expense of the flexibility and reusability of the
+list package.  In particular, the performance benefit from the list package's
+flexible memory management is significant, as indicated in tests 2-4.  As
+we've hopefully shown, the performance costs of the list package are
+reasonable and are easily offset by the flexibility and reusability features
+that were our intended design goals.
+
+
+\section{Conclusions}
+As we have seen, by careful design and judicious use of the C pre-processor,
+we can build various data models from a single set of flexible primitives.  By
+reusing our existing code, we can reduce development time and be more
+confident of the correctness of our packages.  The key elements of our success
+have been
+\begin{itemize}
+	\item data abstraction
+	\item flexible, user-controlled memory management policy
+	\item right mix of mechanism and policy
+	\item intuitive, traditional\footnote{To the Unix world.} calling
+	      interface
+\end{itemize}
+
+These elements allowed us to extend and reuse our previous work, thus
+maximizing our time and productivity.  In fact, we've gotten four resuable
+packages from less than two implementations: we've more than doubled our
+productivity by using a few simple software design heuristics that still
+produced efficient and effective code.  And who says software engineering
+isn't practical?
+
+\newpage
+\appendix
+\newcounter{bogusref}
+\section{References}
+\begin{list}{[\arabic{bogusref}]}{\usecounter{bogusref}}
+\item
+	Paul Helman and Robert Veroff.
+	{\em Intermediate Problem Solving and Data Structures, Walls
+		and Mirrors},
+	Benjamin Cummings, Menlo Park, CA,
+	1986.
+\item
+	Brian W. Kernighan and Rob Pike.
+	{\em The UNIX Programming Environment},
+	Prentice Hall, Englewood Cliffs, NJ,
+	1984. 
+\item
+	Brian W. Kernighan and Dennis M. Ritchie.
+	{\em The C Programming Language},
+	Prentice Hall, Englewood Cliffs, NJ,
+	1978.
+\item
+	Roger S. Pressman.
+	{\em Software Engineering: A Practioner's Approach},
+	McGraw Hill, New York, NY,
+	1982.
+\end{list}
+
+\section{Availability}
+The list package described herein is available via anonymous FTP from {\tt
+eng.ufl.edu} as \linebreak {\tt pub/list.tar.Z}.  Contained in the archive are
+instructions to build and install the {\tt list(3)}, {\tt queue(3)},
+{\tt stack(3)},and {\tt cache(3)} libraries, this paper in \LaTeX \ form,
+complete man pages for the libraries, as well as example programs illustrating
+each package.
+
+The package has been built and tested on various popular architectures,
+including Sun 3 and 4, DECstation 5000, IBM PC/RT and RS/6000, HP 9000 series,
+Sony 800 and 1700 series, and 80[3,4]86 PC-compatibles under Mach.
+
+Bug reports, comments, and suggestions may be sent to the author via
+electronic mail using the address at the front of the paper.
+
+\end{document}

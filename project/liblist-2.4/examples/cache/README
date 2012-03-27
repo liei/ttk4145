@@ -1,0 +1,26 @@
+This directory provides a generic cache package built upon the list(3)
+library.  It is an example of a list(3) library application that goes
+beyond the simple header-file implemented queue and stack examples
+described previously.
+
+The package here implements a cache as a linked list, with lookups
+optimized for MRU (Most Recently Used) and LRU replacement.  The size
+of the cache, as a number of elements, is determined by the user at cache
+creation.
+
+The user supplies his/her matching function that is used for checking
+the cache.  In addition, the user may have the package deal with data
+storage allocation, or may do so themselves.  A hook for specifying
+a deallocation procedure is also provided.
+
+See the man page for more information.
+
+This package is constrained by the GNU General Public License as published
+by the Free Software Foundation.  See the file COPYING for details.
+
+Enjoy.
+--
+Bradley C. Spatz                                        Internet:  bcs@ufl.edu
+Computer and Information Sciences                    UUCP:  uunet!uflorida!bcs
+College of Engineering
+University of Florida                  "School IS hell" -- Matt Groening

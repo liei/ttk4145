@@ -1,0 +1,24 @@
+This directory contains example programs that make use of the list package.
+
+In this directory are three programs, one to illustrate the list package
+itself, and two other programs that make use of the queue and stack
+header files that in turn use the list package.  The latter two programs
+illustrate a traditional queue and stack in terms of the list primitives,
+although this is hidden from the programmer.  The mapping of queue and
+stack primitives to list primitives is accomplished by a single header
+file each, makeing use of direct functional mappings to list primitives.
+
+Finally, the cache directory provides a generic cache package that is
+also built on the list package.  It serves to illustrate further use
+of the list generality.  See the README there for more information.
+
+This package is constrained by the GNU General Public License as published
+by the Free Software Foundation.  See the file COPYING for details.
+
+Enjoy.
+--
+Bradley C. Spatz                                        Internet:  bcs@ufl.edu
+Computer and Information Sciences                    UUCP:  uunet!uflorida!bcs
+College of Engineering
+University of Florida                  "School IS hell" -- Matt Groening
+

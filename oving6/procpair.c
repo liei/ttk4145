@@ -7,7 +7,7 @@
 #include <mqueue.h>
 #include <unistd.h>
 
-
+#define MSG_SIZE 16
 #define DEFAULT_KEY "/procpair"
 #define N 50
 
@@ -22,15 +22,15 @@ int slave_wait(mqd_t mq){
 }
 
 void print_numbers(mqd_t mq, int start){
-  printf("enter print_numbers");
   int n = N;
-  char msg[16];
+  char msg[MSG_SIZE + 1];
   for(int i = start; i < n; i++){
+	printf("%d\n",(int)mq);
 	sprintf(msg,"%d",i);
 	printf("master: %s, .. ",msg);
-	int sent = mq_send(mq,msg,16,0);
+	int sent = mq_send(mq,msg,MSG_SIZE,0);
 	printf("sent: %d\n",sent);
-	sleep(2);
+	sleep(1);
   }
 }
 
@@ -64,25 +64,31 @@ int main(int argc, char **argv){
   //setup message queue
   mqd_t mq;
   if(master){
-	if((mq = mq_open(key,(O_RDWR | O_CREAT),0777,NULL)) == -1){
-	  printf("Couldn't open message queue: %s\n",key);
+	
+	struct mq_attr attr;
+    /* initialize the queue attributes */
+    attr.mq_flags = 0;
+    attr.mq_maxmsg = 10;
+    attr.mq_msgsize = MSG_SIZE;
+    attr.mq_curmsgs = 0;
+
+    /* create the message queue */
+	if((mq = mq_open(DEFAULT_KEY,O_CREAT | O_WRONLY, 0644, &attr)) == (mqd_t)-1){
+	  printf("Couldn't open message queue: %s\n",DEFAULT_KEY);
 	  return EXIT_FAILURE;
 	}
-	printf("opened mq\n");
   } else {
-	if((mq = mq_open(key,O_RDWR)) == -1){
-	  printf("Couldn't open message queue: %s\n",key);
+	if((mq = mq_open(DEFAULT_KEY,O_RDWR)) == (mqd_t)-1){
+	  printf("Couldn't open message queue: %s\n",DEFAULT_KEY);
 	  return EXIT_FAILURE;
 	}	
   }
- 
-  printf("what\n");
+  printf("%d\n",mq);
   int start = 0;
   if(!master){
-	printf("wtf\n");
 	start = slave_wait(mq);
   }
-  printf("before pn\n");
+  
   print_numbers(mq,start);
 
   return EXIT_SUCCESS;

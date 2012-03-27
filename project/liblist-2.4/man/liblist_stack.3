@@ -1,0 +1,182 @@
+.TH STACK 3
+.SH NAME
+\fBstack_init\fP,
+\fBstack_push\fP,
+\fBstack_pop\fP,
+\fBstack_top\fP,
+\fBstack_size\fP,
+\fBstack_empty\fP,
+\fBstack_free\fP
+- generic list-based stack routines
+.SH SYNOPSIS
+.PP
+.ft B
+#include <stack.h>
+.ft P
+.PP
+.ft B
+lstack_t stack_init()
+.PP
+.ft B
+void *stack_push(lstack_t \fIstack\fB, void *\fIdata\fB, int \fIlen\fB);
+.PP
+.ft B
+void *stack_pop(lstack_t \fIstack\fB);
+.PP
+.ft B
+void *stack_top(lstack_t \fIstack\fB);
+.PP
+.ft B
+size_t stack_size(lstack_t \fIstack\fB);
+.PP
+.ft B
+int stack_empty(lstack_t \fIstack\fB);
+.PP
+.ft B
+void stack_free(lstack_t \fIstack\fB, list_dealloc_func_t \fIdealloc\fB);
+.PP
+Link with \fI-llist\fP.\fR
+.PP
+.SH DESCRIPTION
+These routines provide generic stack manipulation of (potentially)
+multiple stacks.  Each stack can hold arbitrarily sized elements, with
+individual elements within a stack varying in size.  It is the
+programmer's responsibility to account for such differences.
+
+Stacks are referred to by variables declared as \fIlstack_t\fP; the
+type \fIlstack_t\fP is an opaque handle. Traditionally, \fISTACK *\fP
+was used instead but new code should use \fIlstack_t\fP.
+
+These routines are based upon the liblist(3) library.  Although this list-based
+implementation requires minimal additional space overhead versus a dedicated
+stack library, greater flexibility and likely overall improved space
+performance is offerred, since the liblist(3) library implements this and other
+data structuring models with a common set of primitives.
+.PP
+.IR stack_init
+initializes and returns a stack descriptor.
+.PP
+.IR stack_push
+pushes an element, pointed to by
+.IR data
+and of size
+.IR len ,
+onto
+.IR stack ,
+and returns a pointer to the pushed data.  If
+.IR len
+is greater than 0, then data is copied onto the stack, otherwise only
+the reference
+.IR data
+is copied onto the stack.  This allows the suer to determine the memory
+allocation policy.
+.PP
+.IR stack_pop
+pops (removes) the element at the top of
+.IR stack
+and returns a pointer to the removed data.
+.PP
+.IR stack_top
+returns a pointer to the element at the top of
+.IR stack ,
+but does not remove the element. \c
+.PP
+.IR stack_size
+returns the number of elements on
+.IR stack
+as a size_t. \c
+.PP
+.IR stack_empty
+returns 1 (TRUE) if
+.IR stack
+is empty, 0 (FALSE) otherwise. \c
+.PP
+.IR stack_free
+deallocates
+.IR stack,
+applying the user-supplied function
+.IR dealloc
+to the data portion of each element remaining in the stack.  If
+.IR dealloc
+is STACK_DEALLOC, then the package will apply its own deallocation
+routine.  This, however, should only be done if the package has been
+responsible for data element allocation, i.e., the push routine has
+been invoked with
+.IR len
+greater than 0.  If
+.IR dealloc
+is STACK_NODEALLOC, no per-element deallocation will be performed.
+.SH MEMORY ALLOCATION
+Both
+.IR stack_init
+and
+.IR stack_push
+allocate memory during their execution.  As such, 
+.IR stack_push
+pushes a copy of the data onto the stack when
+.IR len
+is greater than 0.  If 
+.IR len
+is 0, then only the reference is copied onto the stack.  This allows
+the user to control the memory allocation policy.
+Both functions may fail during memory allocation; see DIAGNOSTICS
+below for more information.
+
+Note that
+.IR stack_pop
+does not allocate memory for the popping data.  It simply disassociates the
+data fron the stack, and thus returns a pointer to data that was previously
+allocated by the package.  It is the programmer's responsibility to deallocate
+such popped data.
+
+If the user has been responsile for data element storage allocation, i.e. the
+push routine has been called with
+.IR len
+equal to 0, then the user must be responsible for storage deallocation
+as well.  A user-supplied deallocation function should be passed to
+.IR stack_free
+for this purpose.  The deallocation function should be declared as:
+.PP
+.RS
+void dealloc(void *data);
+.RE
+.PP
+and will be sent the data element reference of each element in the stack
+when
+.IR stack_free
+is invoked.  If the package has been responsible for data element allocation,
+.IR stack_free
+can be invoked with STACK_DEALLOC for
+.IR dealloc,;
+the stack package will apply its own deallocation routine, or STACK_NODEALLOC
+if no per-element deallocation is required.  It is the
+programmer's responsibility to insure that the memory allocation policy is
+applied properly.
+.SH DIAGNOSTICS
+A NULL returned by
+.IR stack_init
+or
+.IR stack_push
+indicates a failure in allocating memory for the new stack or element.  See
+.IR malloc (3)
+for more information.
+
+.IR stack_pop ,
+and
+.IR stack_top
+return a NULL for an empty stack.
+
+A core dump indicates a bug ;-)
+.SH BUGS
+Both
+.IR stack_pop
+and
+.IR stack_free
+do not physically reclaim storage space, although they do make it
+available for reuse.  While this is a function of
+.IR free (3),
+its application here could be considered a bug.
+.SH SEE ALSO
+liblist(3), liblist_queue(3), cache(3)
+.SH AUTHOR
+Bradley C. Spatz (bcs@ufl.edu), University of Florida.

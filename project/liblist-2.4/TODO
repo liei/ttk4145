@@ -1,0 +1,55 @@
+- Reconcile doxygen documentation and manpages: How is this best done?
+
+- Consider creating new functions for a future release:
+
+list_t list_split(list_t list):
+
+  Return a new list which includes the current element and any
+  following elements, removing them from the original list.
+
+  Use case: I can't justify this at the moment, but I have had to
+  recreate this functionality in difffilter. At the current liblist
+  API level, doing this operation is a headache but can be easily done
+  of one is allowed to look at the members of the struct list and is
+  an operation found in modern list implementations.
+
+list_t list_join(list_t a, list_t b):
+
+  Destroy list b (without freeing the elements in list b) and append
+  them to list a, which is returned.
+
+  Use case: Incremental list creation. Like list_split(), this is a
+  pita to do externally using the existing API but can be easily
+  implemented in list.c and is available in modern list
+  implementations.
+
+void **list_to_array(list_t list, size_t *len):
+
+  Allocate memory for a NULL-terminated array where each entry is a
+  pointer to a specific list item. Does not destroy the list nor free
+  any of the elements. If len is not NULL, the number of items stored
+  into the array will be written to len (this does duplicate the
+  functionality of list_size(), but enough cases of calling
+  list_toarray() would also call list_size() anyway and this is more
+  ``atomic''. Also, determining the number of items in the returned
+  array is important because it is allowable to insert NULL pointers
+  into the list if the application chooses, which means a
+  NULL-terminated array might appear to end when it really
+  hasn't). Order is preserved.
+
+  Use case: If writing a library which uses/manipulates lists of
+  elements, the common C convention is to hand these around as NULL
+  terminated arrays or as arrays with a ``length'' parameter
+  accompanying. An application which uses liblist for convenience will
+  want to be able to produce a data structure conforming to this
+  convention from a list.
+
+list_t list_from_array(void **elements, const size_t *len):
+
+  Create a new list using list_init() and append to it, in order, each
+  element from elements. If len is NULL, then elements is considered a
+  NULL-terminated list. Elsewise, len is a pointer to the number of
+  items stored in elements.
+
+  Use case: Inverse of list_to_array(), using liblist functions on
+  data which is provided by another library in C array form.

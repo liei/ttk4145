@@ -1,0 +1,179 @@
+.TH QUEUE 3
+.SH NAME
+q_init, q_enqueue, q_dequeue, q_front, q_size, q_empty, q_free \-- generic list-based queue routines
+.SH SYNOPSIS
+.PP
+cc [
+.I flags 
+]
+.IR files
+.B -llist
+[ 
+.IR libraries
+]
+.nf
+.PP
+\fB#include <queue.h>
+.PP
+.ft B
+QUEUE *q_init()
+.PP
+.ft B
+void *q_enqueue(QUEUE *q, void *data, size_t len);
+.PP
+.ft B
+void *q_dequeue(QUEUE *q);
+.PP
+.ft B
+void *q_front(QUEUE *q);
+.PP
+.ft B
+size_t q_size(QUEUE *q);
+.PP
+.ft B
+int q_empty(QUEUE *q);
+.PP
+.ft B
+void q_free(QUEUE *q, list_dealloc_func_t dealloc);
+.SH DESCRIPTION
+These routines provide generic queue manipulation of (potentially)
+multiple queues.  Each queue can hold arbitrarily sized elements, with
+individual elements within a queue varying in size.  It is the
+programmer's responsibility to account for such differences.
+
+Queues are referred to by variables declared as QUEUE *; the type QUEUE is
+defined in <queue.h> to be a C structure.
+
+These routines are based upon the list(3) library.  Although this list-based
+implementation requires minimal additional space overhead versus a dedicated
+queue library, greater flexibility and likely overall improved space
+performance is offerred, since the list(3) library implements this and other
+data structuring models with a common set of primitives.
+.PP
+.IR q_init
+initializes and returns a queue descriptor.
+.PP
+.IR q_enqueue
+enqueues an element, pointed to by
+.IR data
+and of size
+.IR len ,
+to the end of
+.IR q ,
+and returns a pointer to the enqueued data.  If
+.IR len
+is greater than 0, then data is copied into the queue, otherwise only
+the reference
+.IR data
+is copied into the queue.  This allows the user to determine the memory
+allocation policy.
+.PP
+.IR q_dequeue
+dequeues the element at the front of 
+.IR q 
+and returns a pointer to the removed data.
+.PP
+.IR q_front
+returns a pointer to the element at the front of
+.IR q ,
+but does not remove the element. \c
+.PP
+.IR q_size
+returns the number of elements in
+.IR q
+as a size_t. \c
+.PP
+.IR q_empty
+returns 1 (TRUE) if
+.IR q
+is empty, 0 (FALSE) otherwise. \c
+.PP
+.IR q_free
+deallocates
+.IR q,
+applying the user-supplied function
+.IR dealloc
+to the data portion of each element remaining in the queue.  If
+.IR dealloc
+is QUEUE_DEALLOC, then the package will apply its own deallocation
+routine.  This, however, should only be done if the package has been
+responsible for data element allocation, i.e., the enqueue routine has
+been invoked with
+.IR len
+greater than 0.  If
+.IR dealloc
+is QUEUE_NODEALLOC, no per-element deallocation will be performed.
+.SH MEMORY ALLOCATION
+Both
+.IR q_init
+and
+.IR q_enqueue
+allocate memory during their execution.  As such, 
+.IR q_enqueue
+enqueues a copy of the data onto the queue when
+.IR len
+is greater than 0.  If
+.IR len
+is 0, then only the reference is copied onto the queue.  This allows
+the user to control the memory allocation policy.
+Both functions may fail during memory allocation; see DIAGNOSTICS
+below for more information.
+
+Note that
+.IR q_dequeue
+does not allocate memory for the dequeueing data.  It simply disassociates the
+data from the queue, and thus returns a pointer to data that was previously
+allocated by the package.  It is the programmer's responsibility to deallocate
+such dequeued data.
+
+If the user has been responsile for data element storage allocation, i.e. the
+enqueue routine has been called with
+.IR len
+equal to 0, then the user must be responsible for storage deallocation
+as well.  A user-supplied deallocation function should be passed to
+.IR queue_free
+for this purpose.  The deallocation function should be declared as:
+.PP
+.RS
+void dealloc(void *data);
+.RE
+.PP
+and will be sent the data element reference of each element in the queue
+when
+.IR queue_free
+is invoked.  If the package has been responsible for data element allocation,
+.IR queue_free
+can be invoked with QUEUE_DEALLOC for
+.IR dealloc,;
+the queue package will apply its own deallocation routine, or QUEUE_NODEALLOC
+if no per-element deallocation is required.  It is the
+programmer's responsibility to insure that the memory allocation policy is
+applied properly.
+.SH DIAGNOSTICS
+A NULL returned by
+.IR q_init
+or
+.IR q_enqueue
+indicates a failure in allocating memory for the new queue or element.  See 
+.IR malloc (3)
+for more information.
+
+.IR q_dequeue ,
+and
+.IR q_front
+return NULL for an empty queue.
+
+A core dump indicates a bug ;-)
+.SH BUGS
+Both
+.IR q_dequeue
+and
+.IR q_free
+do not physically reclaim storage space, although they do make it
+available for reuse.  While this is a function of
+.IR free (3),
+its application here could be considered a bug.
+.SH SEE ALSO
+liblist(3), liblist_stack(3), cache(3)
+.SH AUTHOR
+Bradley C. Spatz (bcs@ufl.edu), University of Florida.

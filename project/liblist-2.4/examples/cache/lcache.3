@@ -1,0 +1,178 @@
+.TH CACHE 3  "September 22, 1991"
+.UC 6
+.SH NAME
+cache_init,cache_enter, cache_check, cache_free,  \-- generic list-based cache routines
+.SH SYNOPSIS
+.PP
+cc [
+.I flags 
+]
+.IR files
+.B -lcache -llist
+[ 
+.IR libraries
+]
+.nf
+.PP
+\fB#include <cache.h>
+.br
+.PP
+.ft B
+CACHE *cache_init(int max_elements)
+.PP
+.ft B
+void *cache_enter(CACHE *cache, void *data, int bytes, void **removed)
+.PP
+.ft B
+void *cache_check(CACHE *cache, void *data, cache_match_func_t match)
+.PP
+.ft B
+void cache_free(CACHE *cache, cache_dealloc_func_t dealloc)
+.SH DESCRIPTION
+These routines provide generic cache manipulation of (potentially)
+multiple caches.  Each cache can hold arbitrarily sized elements, with
+individual elements within a cache varying in size.  It is the
+programmer's responsibility to account for such differences.
+
+Caches are referred to by variables declared as CACHE *; the type CACHE is
+defined in <cache.h> to be a C structure.
+
+These routines are based upon the list(3) library.  Although this list-based
+implementation requires minimal additional space overhead versus a dedicated
+cache library, greater flexibility and likely overall improved space
+performance is offerred, since the list(3) library implements this and other
+data structuring models with a common set of primitives.
+.PP
+.IR cache_init
+initializes and returns a cache descriptor for a cache whose size will not
+exceed
+.IR max_elements
+elements.  An LRU replacement policy is applied to stay within
+.IR max_elements .
+.PP
+.IR cache_enter
+adds an element, pointed to by
+.IR data
+and of size
+.IR bytes ,
+into
+.IR cache ,
+and returns a pointer to the newly inserted data.  If
+.IR bytes
+is greater than 0, then data is copied into the cache, otherwise only
+the reference
+.IR data
+is copied into the cache.  This allows the user to determine the memory
+allocation policy.  If the additional element causes the number of elements
+to exceed the maximum, an LRU replacement policy is applied to the cache.
+If this policy is applied,
+.IR removed
+will point to the data removed from the cache.
+.PP
+.IR cache_check
+checks
+.IR cache
+for the existance of an element referenced by
+.IR data
+and returns a pointer to the removed data.  The user-supplied matching
+function
+.IR match
+determines whether an element is found or not.  This function should be
+declared as
+.PP
+.RS
+typedef list_dealloc_func_t cache_traverse_func_t;
+.br
+typedef int (*list_traverse_func_t)(void *data, void *curr);
+.RE
+.PP
+and should return FALSE (0) if a match occurs between the data to be checked
+for,
+.IR data ,
+and the data at the current element,
+.IR curr ,
+in the cache.  The function should return TRUE (1) otherwise.
+The function returns FALSE due to the semantics of the
+.IR list_traverse
+routine in the list(3) package.  See list(3) for more information.
+.PP
+.IR cache_free
+deallocates
+.IR cache,
+applying the user-supplied function
+.IR dealloc
+to the data portion of each element remaining in the cache.  If
+.IR dealloc
+is CACHE_DEALLOC, then the package will apply its own deallocation
+routine.  This, however, should only be done if the package has been
+responsible for data element allocation, i.e., the
+.IR cache_enter
+routine has been invoked with
+.IR bytes
+greater than 0.  If
+.IR dealloc
+is CACHE_NODEALLOC, no per-element deallocation will be performed.
+.SH MEMORY ALLOCATION
+Both
+.IR cache_init
+and
+.IR cache_enter
+allocate memory during their execution.  As such, 
+.IR cache_enter
+enters a copy of the data into the cache when
+.IR bytes
+is greater than 0.  If
+.IR bytes
+is 0, then only the reference is copied into the cache.  This allows
+the user to control the memory allocation policy.
+Both functions may fail during memory allocation; see DIAGNOSTICS
+below for more information.
+
+If the user has been responsile for data element storage allocation, i.e. the
+enter routine has been called with
+.IR bytes
+equal to 0, then the user must be responsible for storage deallocation
+as well.  A user-supplied deallocation function should be passed to
+.IR cache_free
+for this purpose.  The deallocation function should be declared as:
+.PP
+.RS
+typedef list_dealloc_func_t cache_calloc_func_t;
+.br
+typedef void (*list_dealloc_func_t)(void *data);
+.RE
+.PP
+and will be sent the data element reference of each element in the cache
+when
+.IR cache_free
+is invoked.  If the package has been responsible for data element allocation,
+.IR cache_free
+can be invoked with CACHE_DEALLOC for
+.IR dealloc,;
+the cache package will apply its own deallocation routine, or CACHE_NODEALLOC
+if no per-element deallocation is required.  It is the
+programmer's responsibility to insure that the memory allocation policy is
+applied properly.
+.SH DIAGNOSTICS
+A NULL returned by
+.IR cache_init
+or
+.IR cache_enter
+indicates a failure in allocating memory for the new cache or element.  See 
+.IR malloc (3)
+for more information.
+
+.IR cache_check
+returns NULL if no matching element was found in the cache.
+
+A core dump indicates a bug.  ;-)
+.SH BUGS
+.IR cache_free
+does not physically reclaim storage space, although it does make it
+available for reuse.  While this is a function of
+.IR free (3),
+its application here could be considered a bug.
+.SH SEE ALSO
+list(3), queue(3), stack(3)
+.SH AUTHOR
+Bradley C. Spatz (bcs@ufl.edu), University of Florida.

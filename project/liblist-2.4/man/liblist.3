@@ -1,0 +1,443 @@
+.TH LIST 3
+.SH NAME
+\fBlist_init\fP,
+\fBlist_mvprev\fP,
+\fBlist_mvnext\fP,
+\fBlist_mvfront\fP,
+\fBlist_mvrear\fP,
+\fBlist_front\fP,
+\fBlist_curr\fP,
+\fBlist_rear\fP,
+\fBlist_insert_before\fP,
+\fBlist_insert_after\fP,
+\fBlist_remove_front\fP,
+\fBlist_remove_curr\fP,
+\fBlist_remove_rear\fP,
+\fBlist_remove_element\fP,
+\fBlist_size\fP,
+\fBlist_empty\fP,
+\fBlist_traverse\fP,
+\fBlist_free\fP
+- generic doubly-linked-list routines
+.SH SYNOPSIS
+.PP
+.ft B
+#include <list.h>
+.ft P
+.PP
+.ft B
+list_t list_init();
+.PP
+.ft B
+list_t list_mvprev(list_t \fIlist\fB);
+.PP
+.ft B
+list_t list_mvnext(list_t \fIlist\fB);
+.PP
+.ft B
+list_t list_mvfront(list_t \fIlist\fB);
+.PP
+.ft B
+list_t list_mvrear(list_t \fIlist\fB);
+.PP
+.ft B
+void *list_front(list_t \fIlist\fB);
+.PP
+.ft B
+void *list_curr(list_t \fIlist\fB);
+.PP
+.ft B
+void *list_rear(list_t \fIlist\fB);
+.PP
+.ft B
+void *list_insert_before(list_t \fIlist\fB, void *\fIelement\fB, size_t \fIlen\fB);
+.PP
+.ft B
+void *list_insert_after(list_t \fIlist\fB, void *\fIelement\fB, size_t \fIlen\fB);
+.PP
+.ft B
+void *list_remove_front(list_t \fIlist\fB);
+.PP
+.ft B
+void *list_remove_curr(list_t \fIlist\fB);
+.PP
+.ft B
+void *list_remove_rear(list_t \fIlist\fB);
+.PP
+.ft B
+list_status_t list_remove_element(list_t \fIlist\fB, void *\fIelement\fB);
+.PP
+.ft B
+size_t list_size(list_t \fIlist\fB);
+.PP
+.ft B
+int list_empty(list_t \fIlist\fB);
+.PP
+.ft B
+typedef int (*list_traverse_func_t)(void *\fIdata\fB, void *\fIelement\fB);
+.PP
+.ft B
+list_status_t list_traverse(list_t \fIlist\fB, void *\fIdata\fB, list_traverse_func_t \fIfunc\fB, int \fIopts\fB);
+.PP
+.ft B
+typedef void (*list_dealloc_func_t)(void *\fIelement\fB);
+.PP
+.ft B
+void list_free(list_t \fIlist\fB, list_dealloc_func_t \fIdealloc\fB);
+.PP
+Link with \fI-llist\fP.
+.PP
+.SH DESCRIPTION
+These routines provide generic manipulation of (potentially)
+multiple linked lists.  Each list can hold arbitrarily sized elements, with
+individual elements within a list varying in size.  It is the
+programmers responsibility to account for such differences.
+
+Lists are referred to by variables declared as \fIlist_t\fP; the type \fIlist_t\fP
+is an opaque handle. Traditionally, \fILIST *\fP was used instead. \fILIST *\fP is
+still defined for API backwards-compatibility, but new code should use \fIlist_t\fP.
+Each descriptor maintains references to the front, rear, and current elements. It
+also holds the size (or length) of the list.  Various routines operate relative to
+the current element.
+.PP
+.IR list_t
+is list handle.
+.PP
+.IR list_status_t
+may be one of the following meaningful values:
+.RS
+.nf
+.ta +1.0i +1.0i
+LIST_EMPTY	The list is empty. No operation was performed.
+LIST_OK		The operation was successfully performed.
+LIST_EXTENT	The operation finished without error but
+		the end of the list was reached without any
+		special action.
+.fi
+.RE
+.PP
+.IR list_init
+initializes and returns a list descriptor.
+.PP
+.IR list_mvprev ,
+.IR list_mvnext ,
+.IR list_mvfront ,
+.IR list_mvrear ,
+move to the previous, next, front, or rear element in
+.IR list ,
+and return the modified list descriptor.  Movement previous or next is relative
+to the current element.
+.PP
+.IR list_front ,
+.IR list_curr ,
+and
+.IR list_rear 
+return pointers to the front, current, or rear element in
+.IR list . \c
+.PP
+.IR list_insert_before
+and
+.IR list_insert_after
+insert an element, pointed to by
+.IR element
+and of size
+.IR len ,
+into
+.IR list ,
+either before or after the current element.  The newly inserted element is
+then considered the current element.  Both routines return a pointer to the
+newly inserted element.  If
+.IR len
+is greater than 0, then element is copied into the list, otherwise
+only the reference
+.IR data
+is copied into the list.  This allows the user to determine the
+memory allocation policy.
+.PP
+.IR list_remove_front ,
+.IR list_remove_curr ,
+and
+.IR list_remove_rear 
+remove the front, current, or rear element from
+.IR list 
+and return a pointer to the removed element.
+The current element is then set to the next element (prior to the remove) in
+the list, unless the element at the rear of the list was removed.  In this
+case, the current element is set to the previous element (prior to the
+remove).
+.PP
+.IR list_remove_element
+removes an element identified by the pointer
+.IR element
+from the list. This function is only useful if you are allocating
+each element yourself (i.e., you are setting len to 0 when calling
+.IR list_insert_before
+or
+.IR list_insert_after ).
+This function will remove all instances of
+.IR element ,
+at the expense of forcing a traversal of the whole list. If the end
+of the list is reached without finding
+.IR element ,
+LIST_EXTENT is returned. Otherwise, if one or more elements is
+successfully removed, LIST_OK is returned.
+.PP
+.IR list_size
+returns the size (or number of elements) of
+.IR list
+as a size_t. \c
+.PP
+.IR list_empty
+returns 1 (TRUE) if
+.IR list
+is empty, 0 (FALSE) otherwise. \c
+.PP
+.IR list_traverse
+traverses
+.IR list
+according to
+.IR opts ,
+calling
+.IR func
+at each element encountered in the traversal, until
+.IR func
+returns 0 (FALSE) or the extent of the list is reached.  This routine
+can be used to search for an item or print the contents of the list,
+for example.  See the section LIST TRAVERSAL for more information.
+.PP
+.IR list_free
+deallocates
+.IR list,
+applying the user-supplied function
+.IR dealloc
+to the data portion of each element remaining in the list.  If
+.IR dealloc
+is LIST_DEALLOC, then the package will apply its own deallocation
+routine.  This, however, should only be done if the package has been
+responsible for data element allocation, i.e., the insert routines
+have been invoked with
+.IR len
+greater than 0.  If
+.IR dealloc
+is LIST_NODEALLOC, no per-element deallocation will be performed.
+.SH LIST TRAVERSAL
+The behavior of the routine
+.IR list_traversal
+is controlled by the user-supplied function
+.IR func
+which is responsible for the actions performed at each element in the
+traversal.  In addition, the scope and direction of the
+traversal can be specified with the
+.IR opts
+parameter.
+.IR Func
+should be declared to match the
+.IR diff_traverse_func_t
+type:
+.PP
+.RS
+int func(void *data, void *element);
+.RE
+.PP
+and should return 1 (TRUE) if the traversal should continue, or 0 (FALSE)
+if the traversal should terminate.  The function does not need to check
+if the extent of the list has been reached; the return code from
+.IR list_traverse
+will indicate the status of the traversal.  At each element encountered
+in the traversal,
+.IR list_traverse
+will invoke
+.IR func ,
+passing it the two parameters
+.IR data
+and
+.IR element ;
+.IR data
+being the data pointer sent to
+.IR list_traverse
+originally, and
+.IR element
+being the current element in the traversal.  For example,
+by passing the following function to
+.IR list_traverse ,
+the contents of a list of names could be printed.
+.PP
+.RS
+.nf
+struct mystruct
+{
+    char *name;
+};
+
+int func(void *data, struct mystruct *element)
+{
+    printf("Name=%30s.\\n", element->name);
+    return TRUE;
+}
+.fi
+.RE
+.PP
+In this example, the parameter
+.IR data
+is ignored and the function unconditionally returns 1 (TRUE), but functions
+like
+.PP
+.RS
+.nf
+int func(void *data, void *element)
+{
+    if (strcmp(data, element))
+       return TRUE;
+    else
+       return FALSE;
+}
+.fi
+.RE
+.PP
+can be used to position the current element pointer prior to insertion, so
+as to keep the list ordered.  
+.PP
+The direction and scope of the traversal can be controlled by specifying
+one or more of the following options:
+.PP
+.RS
+.nf
+.ta 1.0i +1.0i +.5i
+LIST_FORW	*	traverse forward (next)
+LIST_BACK		traverse backwards (prev)
+LIST_FRNT	*	start from the front of the
+			list (implies LIST_FORW)
+LIST_CURR		start from the current element
+LIST_REAR		start from the rear element
+			(implies LIST_BACK)
+LIST_SAVE	*	do not alter the current element
+			pointer during the traversal
+LIST_ALTR		alter the current element pointer
+			during the traversal
+.fi
+.RE
+.PP
+The asterisks (*) denote the default values.  These options can be combined
+with the logical OR operator, but at least one value must be specified.
+For example, specifying
+.PP
+.RS
+LIST_FORW
+.RE
+.PP
+for
+.IR opts
+would request a traversal forwards from the current position,
+restoring the current element pointer after the traversal, whereas
+.PP
+.RS
+(LIST_BACK | LIST_CURR | LIST_ALTR)
+.RE
+.PP
+would request a traversal backwards from the current position, and would
+set the current element pointer to the last element encountered in the
+traversal.
+
+It should be noted that
+.IR func
+should not invoke any of the list routines unless LIST_ALTR has been
+specified, since many of the routines act relative to the current
+element pointer, which is not modified during a traversal with
+LIST_SAVE specified.
+.SH MEMORY ALLOCATION
+The routines
+.IR list_init ,
+.IR list_insert_before ,
+and
+.IR list_insert_after
+allocate memory during their execution.  As such, 
+.IR list_insert_before
+and
+.IR list_insert_after
+insert a copy of the element into the list when they are invoked with
+.IR len
+greater than 0.  If
+.IR len
+is 0, then only the reference is copied into the list.  This allows
+the user to control the memory allocation policy.  Both functions may
+fail during memory allocation; see DIAGNOSTICS below for more information.
+
+Note that
+.IR list_remove_front ,
+.IR list_remove_curr ,
+and
+.IR list_remove_rear
+do not deallocate memory for the removed element.  They simply disassociate the
+element from the list, and thus return a pointer to the element that was previously
+allocated by the package.  It is the programmer's responsibility to deallocate
+such a removed element.
+
+If the user has been responsible for element storage allocation, i.e. the
+insert routines have been called with
+.IR len
+equal to 0, then the user must be responsible for storage deallocation
+as well.  A user-supplied deallocation function should be passed to
+.IR list_free
+for this purpose.  The deallocation function should be declared as the
+.IR list_dealloc_func_t
+typedef:
+.PP
+.RS
+void dealloc(void *data)
+.RE
+.PP
+This function will be passed each element in the list when
+.IR list_free
+is invoked.  If liblist has been responsible for data element allocation,
+.IR list_free
+can be invoked with LIST_DEALLOC for
+.IR dealloc,;
+the list package will apply its own deallocation routine, or
+LIST_NODEALLOC if no per-element deallocation is required.  It is the
+programmer's responsibility to insure that the memory allocation
+policy is applied properly.
+.SH DIAGNOSTICS
+A NULL returned by
+.IR list_init ,
+.IR list_insert_before ,
+or
+.IR list_insert_after
+indicates a failure in allocating memory for the new list or element.  See
+.IR malloc (3)
+for more information.
+
+.IR list_mvprev ,
+.IR list_mvnext ,
+.IR list_mvfront ,
+.IR list_mvrear ,
+.IR list_front ,
+.IR list_curr ,
+.IR list_rear ,
+.IR list_remove_front,
+.IR list_remove_curr,
+and
+.IR list_remove_rear
+all return NULL if
+.IR list
+is empty.
+
+.IR list_traverse
+returns LIST_EMPTY for an empty list, LIST_EXTENT if an attempt was
+made to move beyond the extent of the list, or LIST_OK otherwise.
+
+A core dump indicates a bug ;-)
+.SH BUGS
+The routines
+.IR list_remove_front ,
+.IR list_remove_curr ,
+.IR list_remove_rear ,
+and
+.IR list_free
+do not physically reclaim storage space, although they do make it
+available for reuse.  While this is a function of
+.IR free (3),
+its application here could be considered a bug.
+.SH SEE ALSO
+liblist_queue(3), liblist_stack(3), cache(3)
+.SH AUTHOR
+Bradley C. Spatz (bcs@ufl.edu), University of Florida.
