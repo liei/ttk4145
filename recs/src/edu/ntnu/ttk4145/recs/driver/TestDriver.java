@@ -36,9 +36,13 @@ public class TestDriver extends Driver{
 	public static void main(String[] args) {
 		Driver driver = Driver.makeInstance(TestDriver.class);
 		
+		driver.startCallbacks();
+		
 		System.out.println("Started");
 		try {
 			System.in.read();
 		} catch (IOException e) {}
+		
+		driver.stopCallbacks();
 	}
 }

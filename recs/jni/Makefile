@@ -10,13 +10,13 @@ CFLAGS = -std=c99 -g -fPIC -Wall $(INCLUDES) -MMD
 LDFLAGS = -shared
 
 # Libraries
-LIBS = -lpthread -lcomedi -lm
+LIBS = -lcomedi
 
 # list of sources
 SOURCES = $(shell find -name "*.c")
 
 # Program executable file name.
-TARGET = libdriver.so
+TARGET = libio.so
 
 # Default rule, to compile everything.
 all: $(TARGET)
@@ -33,7 +33,6 @@ OBJECTS = $(SOURCES:.c=.o)
 # rule to link the program
 $(TARGET): $(OBJECTS)
 	gcc $(LDFLAGS) -o $@ $^ $(LIBS) 
-	cp $@ ..
 
 # Compile: create object files from C source files.
 %.o : %.c
