@@ -8,7 +8,7 @@ public abstract class Driver {
 	public static final int ELEV_DIR_NONE = 2;
 	
 	static{
-		System.loadLibrary("driver1");
+		System.loadLibrary("driver");
 	}
 	
 	private static Driver instance = null;

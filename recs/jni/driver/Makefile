@@ -1,14 +1,22 @@
+
+JAVA_HOME = $(shell readlink -f $(shell which javac) | sed "s:bin/javac::")
+
+INCLUDES = -I. -I$(JAVA_HOME)include
+
 # Compiler flags go here.
-CFLAGS = -std=c99 -g -Wall -I . -MMD
+CFLAGS = -std=c99 -g -fPIC -Wall $(INCLUDES) -MMD
 
 # Linker flags go here.
-LDFLAGS = -g -lpthread -lcomedi -lm
+LDFLAGS = -shared
+
+# Libraries
+LIBS = -lpthread -lcomedi -lm
 
 # list of sources
 SOURCES = $(shell find -name "*.c")
 
 # Program executable file name.
-TARGET = elevtest
+TARGET = libdriver.so
 
 # Default rule, to compile everything.
 all: $(TARGET)
@@ -24,7 +32,8 @@ OBJECTS = $(SOURCES:.c=.o)
 
 # rule to link the program
 $(TARGET): $(OBJECTS)
-	gcc -o $@ $^ $(LDFLAGS)
+	gcc $(LDFLAGS) -o $@ $^ $(LIBS) 
+	cp $@ ..
 
 # Compile: create object files from C source files.
 %.o : %.c
@@ -35,7 +44,10 @@ $(TARGET): $(OBJECTS)
 
 # rule for cleaning re-compilable files.
 clean:
-	rm -f $(TARGET) $(OBJECTS) $(DEPS)
+	rm -f $(OBJECTS) $(DEPS)
+
+purge: clean
+	rm -f $(TARGET)
 
 rebuild: clean all
 
