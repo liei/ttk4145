@@ -2,7 +2,7 @@ package edu.ntnu.ttk4145.recs.driver;
 
 public abstract class Driver {
 	
-	private static final int NUMBER_OF_FLOORS = 4;
+	public static final int NUMBER_OF_FLOORS = 4;
 
 	private static final int MOTOR          = 0x100 +  0;
 
@@ -244,7 +244,6 @@ public abstract class Driver {
 			callback.join();
 		} catch (InterruptedException e) {}
 	}
-	
 	
 	protected abstract void buttonPressed(Button button, int floor);
 	

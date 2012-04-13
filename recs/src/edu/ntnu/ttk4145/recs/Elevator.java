@@ -1,17 +1,26 @@
 package edu.ntnu.ttk4145.recs;
 
-import java.net.InetAddress;
+import edu.ntnu.ttk4145.recs.driver.Driver;
+import edu.ntnu.ttk4145.recs.driver.Driver.Button;
+
 
 public class Elevator {
 
 	
 	private int id;
-	private InetAddress address;
 	
 	private Direction dir;
-	private boolean lamps[][];
 	
-	private int orders[][];
+	private boolean[][] lamps;
+	
+	private Order[][] orders = new Order[Button.values().length][Driver.NUMBER_OF_FLOORS];
+	
+	
+	private boolean stopped;
+	private boolean moving;
+	private boolean obstructed;
+	
+	private double floor;
 	
 	private static Elevator localInstance = null;
 	
@@ -20,6 +29,10 @@ public class Elevator {
 			localInstance = new Elevator();
 		}
 		return localInstance;
+	}
+	
+	public int getId() {
+		return id;
 	}
 	
 	
@@ -31,7 +44,14 @@ public class Elevator {
 
 
 	public void updateLife(int tick) {
-		// TODO Auto-generated method stub
+		
+	}
+
+	public void addOrder(Order order){
+		
+	}
+
+	public void addOrder(Button button, int floor) {
 		
 	}
 	

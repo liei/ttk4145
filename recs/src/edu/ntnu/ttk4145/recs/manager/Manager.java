@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.ntnu.ttk4145.recs.Elevator;
+import edu.ntnu.ttk4145.recs.driver.Driver.Button;
 
 public class Manager {
 	
@@ -28,6 +29,11 @@ public class Manager {
 	public void updatePeer(int id, int tick) {
 		Elevator peer = peers.get(id);
 		peer.updateLife(tick);
+	}
+
+	public void registerCall(Button button, int floor) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	
