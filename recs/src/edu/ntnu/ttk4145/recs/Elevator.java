@@ -1,12 +1,12 @@
 package edu.ntnu.ttk4145.recs;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class Elevator {
 
 	
 	private int id;
-	private InetAddress address;
 	
 	private Direction dir;
 	private boolean lamps[][];
@@ -17,12 +17,21 @@ public class Elevator {
 	
 	public static Elevator getLocalElevator(){
 		if(localInstance == null){
-			localInstance = new Elevator();
+			int id = 0;
+			try {
+				id = Util.intFromBytes(InetAddress.getLocalHost().getAddress());
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			localInstance = new Elevator(id);
 		}
 		return localInstance;
 	}
 	
-	
+	public Elevator(int id){
+		this.id = id;
+	}
 	
 	public static enum Direction {
 		UP, DOWN, STOP;
@@ -30,9 +39,13 @@ public class Elevator {
 
 
 
-	public void updateLife(int tick) {
+	public void updateLife(long time) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public int getId() {
+		return this.id;
 	}
 	
 }

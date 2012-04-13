@@ -7,6 +7,7 @@ public class TestDriver extends Driver{
 	@Override
 	protected void buttonPressed(Button button, int floor) {
 		setButtonLamp(button,floor,true);
+		System.out.printf("TestDriver.buttonPressed(%s,%d)%n",button,floor);
 	}
 	
 	@Override
@@ -33,15 +34,19 @@ public class TestDriver extends Driver{
 		System.out.println("Obstruction switch flipped");
 	}
 	
+	static int speed = 2000;
+	
 	public static void main(String[] args) {
 		Driver driver = Driver.makeInstance(TestDriver.class);
+		driver.resetAllLamps();
+		driver.setSpeed(speed);
 		
 		driver.startCallbacks();
-		
 		System.out.println("Started");
 		try {
 			System.in.read();
 		} catch (IOException e) {}
+		
 		
 		driver.stopCallbacks();
 	}

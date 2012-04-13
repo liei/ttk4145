@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.ntnu.ttk4145.recs.Elevator;
+import edu.ntnu.ttk4145.recs.network.Radio;
 
 public class Manager {
 	
@@ -25,9 +26,15 @@ public class Manager {
 		peers = new HashMap<Integer,Elevator>();
 	}
 
-	public void updatePeer(int id, int tick) {
+	public void updatePeer(int id, long time) {
 		Elevator peer = peers.get(id);
-		peer.updateLife(tick);
+		System.out.println("ID: " + id +" time: " + time);
+		//peer.updateLife(time);
+	}
+	
+	public static void main(String[] args) {
+		Radio radio = new Radio("225.1.1.1", 7001, 7002, "12");
+		radio.start();
 	}
 	
 	
