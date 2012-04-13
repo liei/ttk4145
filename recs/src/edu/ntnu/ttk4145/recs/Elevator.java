@@ -8,14 +8,13 @@ import java.net.UnknownHostException;
 public class Elevator {
 
 	
-	private int id;
+	private long id;
 	
 	private Direction dir;
 	
 	private boolean[][] lamps;
 	
 	private Order[][] orders = new Order[Button.values().length][Driver.NUMBER_OF_FLOORS];
-	
 	
 	private boolean stopped;
 	private boolean moving;
@@ -27,26 +26,20 @@ public class Elevator {
 	
 	public static Elevator getLocalElevator(){
 		if(localInstance == null){
-			int id = 0;
-			try {
-				id = Util.intFromBytes(InetAddress.getLocalHost().getAddress());
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			localInstance = new Elevator(id);
+			localInstance = new Elevator(Util.makeLocalId());
 		}
 		return localInstance;
 	}
 	
-	public int getId() {
+	public Elevator(long id){
+		this.id = id;
+	}
+	
+	public long getId() {
 		return id;
 	}
 	
 	
-	public Elevator(int id){
-		this.id = id;
-	}
 	
 	public static enum Direction {
 		UP, DOWN, STOP;
@@ -61,7 +54,6 @@ public class Elevator {
 
 	public void addOrder(Button button, int floor) {
 		
-		
 	}
 	
 	public void updateLife(long time) {
@@ -69,5 +61,27 @@ public class Elevator {
 		
 	}
 	
+//	Thread elevator;
+//	private boolean running;
+//	
+//	public void startLocalElevatorThread(){
+//		
+//		elevator = new Thread(new Runnable(){
+//			@Override
+//			public void run() {
+//				running = true;
+//				while(running){
+//					
+//				}
+//			}
+//		});
+//	}
+//	
+//	public void stopLocalElevatorThread(){
+//		running = false;
+//		try {
+//			elevator.join();
+//		} catch (InterruptedException e) {}
+//	}
 	
 }

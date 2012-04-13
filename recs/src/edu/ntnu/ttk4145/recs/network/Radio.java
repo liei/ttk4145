@@ -104,8 +104,8 @@ public class Radio {
 			}
 			running = true;
 			while(running) {
-				int id = Elevator.getLocalElevator().getId();
-				byte[] msg = Util.bytesFromInt(id);
+				long id = Elevator.getLocalElevator().getId();
+				byte[] msg = Util.asBytes(id);
 				try {
 					socket.send(new DatagramPacket(msg, msg.length, group, receivePort));
 				} catch (IOException e) {

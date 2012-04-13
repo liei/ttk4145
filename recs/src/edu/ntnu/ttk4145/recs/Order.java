@@ -15,6 +15,4 @@ public class Order {
 		this.dir = dir;
 		this.floor = floor;
 	}
-	
-	
 }
