@@ -9,8 +9,6 @@ import java.util.Enumeration;
 import java.util.Random;
 
 public class Util {
-
-	
 	
 	private static final Random RNG = new Random();
 

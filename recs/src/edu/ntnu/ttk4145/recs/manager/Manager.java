@@ -5,7 +5,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -13,11 +12,18 @@ import edu.ntnu.ttk4145.recs.Elevator;
 import edu.ntnu.ttk4145.recs.Order;
 import edu.ntnu.ttk4145.recs.Peer;
 import edu.ntnu.ttk4145.recs.UpdateStateMessage;
+import edu.ntnu.ttk4145.recs.Util;
 import edu.ntnu.ttk4145.recs.driver.Driver.Button;
 import edu.ntnu.ttk4145.recs.network.Radio;
 
 public class Manager {
 	
+	private final static String MULTICAST_GROUP = "224.0.2.1";
+	private final static int SEND_PORT = 7001;
+	private final static int RECEIVE_PORT = 7002;
+	private final static long MY_ID = Util.makeLocalId();
+	private Peer master;
+	private boolean isMaster = true;
 	
 	public HashMap<Integer,Order> orders;
 	
@@ -34,10 +40,20 @@ public class Manager {
 	
 	private Manager(){
 		peers = new TreeMap<Long,Peer>();
+		discoverMaster();
 	}
 
-	public void updatePeer(int id, long time) {
-		System.out.println("ID: " + id +" time: " + time);
+	public void updatePeer(long id, long timeOfLastAlive, InetAddress address) {
+		if(peers.containsKey(id)) {
+			peers.get(id).setTimeOfLastAlive(timeOfLastAlive);
+		}
+		else {
+			Peer newPeer = new Peer(address, id);
+			peers.put(id, newPeer);
+			if(newPeer.getId() < master.getId()) {
+				master = newPeer;
+			}
+		}
 	}
 	
 	public static void main(String[] args) throws SocketException {
@@ -50,8 +66,16 @@ public class Manager {
 			e.printStackTrace();
 		}
 		
-		Radio radio = new Radio("224.0.2.1", 7001, 7002, "12");
+		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
 		radio.start();
+	}
+
+	public static String getMulticastgroup() {
+		return MULTICAST_GROUP;
+	}
+
+	public static int getSendport() {
+		return SEND_PORT;
 	}
 
 	public void registerCall(Button button, int floor) {
@@ -65,10 +89,23 @@ public class Manager {
 		}
 	}
 	
-	
-	
-	
-	
-	
+	public void discoverMaster() {
+		try {
+			//Wait to receive a few alive messages before we search list of peers for a master.
+			Thread.sleep(Radio.getAliveInterval());
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		long minId = MY_ID;
+		//Peer with lowest ID is master.
+		for (Peer peer : peers.values()) {
+			if(minId < peer.getId()) {
+				minId = peer.getId();
+				isMaster = false;
+			}
+		}
+		master = peers.get(minId);
+	}
 	
 }
