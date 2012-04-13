@@ -11,7 +11,7 @@ public class Order {
 	public final int floor;
 	
 	public Order(Direction dir, int floor){
-		this.id = (Elevator.getLocalElevator().getId() << 32) + counter++;
+		this.id = (Elevator.getLocalElevator().getId() & 0xff00) + counter++;
 		this.dir = dir;
 		this.floor = floor;
 	}
