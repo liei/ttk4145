@@ -16,8 +16,6 @@ Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1init
   int i, status = 0;
 
   it_g = comedi_open("/dev/comedi0");
-  printf("it_g: %p\n",it_g);
-  fflush(stdout);
   if (it_g == NULL)
 	return 0;
   
@@ -91,5 +89,7 @@ Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1read_1analog
 JNIEXPORT void JNICALL 
 Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1write_1analog
 (JNIEnv *env, jobject this, jint channel, jint data){
+  printf("Write analog: %d\n",data);
+  fflush(stdout);
   comedi_data_write(it_g, channel>>8, channel&0xff, 0, AREF_GROUND, data);
 }

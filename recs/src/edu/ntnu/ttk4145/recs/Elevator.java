@@ -2,7 +2,8 @@ package edu.ntnu.ttk4145.recs;
 
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Button;
-
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class Elevator {
 
@@ -26,7 +27,14 @@ public class Elevator {
 	
 	public static Elevator getLocalElevator(){
 		if(localInstance == null){
-			localInstance = new Elevator();
+			int id = 0;
+			try {
+				id = Util.intFromBytes(InetAddress.getLocalHost().getAddress());
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			localInstance = new Elevator(id);
 		}
 		return localInstance;
 	}
@@ -36,6 +44,9 @@ public class Elevator {
 	}
 	
 	
+	public Elevator(int id){
+		this.id = id;
+	}
 	
 	public static enum Direction {
 		UP, DOWN, STOP;
@@ -43,9 +54,6 @@ public class Elevator {
 
 
 
-	public void updateLife(int tick) {
-		
-	}
 
 	public void addOrder(Order order){
 		
@@ -53,6 +61,13 @@ public class Elevator {
 
 	public void addOrder(Button button, int floor) {
 		
+		
 	}
+	
+	public void updateLife(long time) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	
 }
