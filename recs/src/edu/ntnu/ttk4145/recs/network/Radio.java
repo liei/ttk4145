@@ -13,14 +13,13 @@ import edu.ntnu.ttk4145.recs.manager.Manager;
 public class Radio {
 	
 	private String multicastGroup;
-	private String aliveMessage;
 	private int receivePort;
 	private int sendPort;
 	private AliveSender sender;
 	AliveListener listener;
-
-	public Radio(String multicastGroup, int sendPort, int receivePort, String aliveMessage) {
-		this.aliveMessage = aliveMessage;
+	private final static int ALIVE_INTERVAL = 1000; //ms
+	
+	public Radio(String multicastGroup, int sendPort, int receivePort) {
 		this.sendPort = sendPort;
 		this.receivePort = receivePort;
 		this.multicastGroup = multicastGroup;
@@ -39,6 +38,10 @@ public class Radio {
 	
 	public void stopAliveSender() {
 		sender.stop();
+	}
+	
+	public static int getAliveInterval() {
+		return ALIVE_INTERVAL;
 	}
 	
 	private class AliveListener implements Runnable{
@@ -64,8 +67,8 @@ public class Radio {
 				packet = new DatagramPacket(buf, buf.length);
 				try {
 					socket.receive(packet);
-					int id = parseMessage(packet);
-					Manager.getInstance().updatePeer(id, System.currentTimeMillis());
+					long id = parseMessage(packet);
+					Manager.getInstance().updatePeer(id, System.currentTimeMillis(), packet.getAddress());
 				} catch (IOException e) {
 					continue;
 				}
@@ -79,9 +82,9 @@ public class Radio {
 			}
 		}
 
-		private int parseMessage(DatagramPacket packet) {
+		private long parseMessage(DatagramPacket packet) {
 			byte[] bytes = packet.getData();
-			return ByteBuffer.wrap(bytes).getInt();
+			return ByteBuffer.wrap(bytes).getLong();
 		}
 		
 		public void stop() {
@@ -112,7 +115,7 @@ public class Radio {
 					continue;
 				}
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(ALIVE_INTERVAL);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					continue;
