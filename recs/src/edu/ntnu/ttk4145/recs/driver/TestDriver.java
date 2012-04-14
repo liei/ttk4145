@@ -5,7 +5,7 @@ import java.io.IOException;
 public class TestDriver extends Driver{
 
 	@Override
-	protected void buttonPressed(Button button, int floor) {
+	protected void buttonPressed(Call button, int floor) {
 		setButtonLamp(button,floor,true);
 		System.out.printf("TestDriver.buttonPressed(%s,%d)%n",button,floor);
 	}

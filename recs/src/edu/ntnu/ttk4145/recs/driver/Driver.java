@@ -163,7 +163,7 @@ public abstract class Driver {
 		}
 	}
 	
-	public void setButtonLamp(Button button, int floor, boolean on) {
+	public void setButtonLamp(Call button, int floor, boolean on) {
 		legalFloor(floor);
 		
 		if(on){
@@ -178,9 +178,9 @@ public abstract class Driver {
 		setStopLamp(false);
 		setDoorOpenLamp(false);
 		for(int floor = 0; floor < NUMBER_OF_FLOORS; floor++){
-			setButtonLamp(Button.DOWN,floor,false);
-			setButtonLamp(Button.UP,floor,false);
-			setButtonLamp(Button.COMMAND,floor,false);
+			setButtonLamp(Call.DOWN,floor,false);
+			setButtonLamp(Call.UP,floor,false);
+			setButtonLamp(Call.COMMAND,floor,false);
 		}
 	}
 	
@@ -203,13 +203,13 @@ public abstract class Driver {
 							if(value != previousValue[type.ordinal()][floor]){
 								switch(type){
 								case CALL_UP:
-									buttonPressed(Button.UP, floor);
+									buttonPressed(Call.UP, floor);
 									break;
 								case CALL_DOWN:
-									buttonPressed(Button.DOWN,floor);
+									buttonPressed(Call.DOWN,floor);
 									break;
 								case CALL_COMMAND:
-									buttonPressed(Button.COMMAND,floor);
+									buttonPressed(Call.COMMAND,floor);
 									break;
 								case SENSOR:
 									floorSensorTriggered(floor, value);
@@ -245,7 +245,7 @@ public abstract class Driver {
 		} catch (InterruptedException e) {}
 	}
 	
-	protected abstract void buttonPressed(Button button, int floor);
+	protected abstract void buttonPressed(Call call, int floor);
 	
 	protected abstract void floorSensorTriggered(int floor, boolean arriving);
 	
@@ -253,7 +253,7 @@ public abstract class Driver {
 	
 	protected abstract void obstructionSensorTriggered(boolean enabled);
 	
-	public static enum Button {
+	public static enum Call {
 		UP, DOWN, COMMAND;
 	}
 	

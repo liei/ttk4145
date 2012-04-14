@@ -9,11 +9,12 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import edu.ntnu.ttk4145.recs.Elevator;
+import edu.ntnu.ttk4145.recs.Elevator.State;
 import edu.ntnu.ttk4145.recs.Order;
 import edu.ntnu.ttk4145.recs.Peer;
 import edu.ntnu.ttk4145.recs.UpdateStateMessage;
 import edu.ntnu.ttk4145.recs.Util;
-import edu.ntnu.ttk4145.recs.driver.Driver.Button;
+import edu.ntnu.ttk4145.recs.driver.Driver.Call;
 import edu.ntnu.ttk4145.recs.network.Radio;
 
 public class Manager {
@@ -78,14 +79,14 @@ public class Manager {
 		return SEND_PORT;
 	}
 
-	public void registerCall(Button button, int floor) {
+	public void registerCall(Call button, int floor) {
 		// TODO Auto-generated method stub
 		
 	}
 	
-	public void updateState(Elevator elevator){
+	public void updateState(Elevator.State state){
 		for(Peer peer : peers.values()){
-			peer.sendMessage(new UpdateStateMessage(elevator));
+			peer.sendMessage(new UpdateStateMessage(state));
 		}
 	}
 	
@@ -106,6 +107,11 @@ public class Manager {
 			}
 		}
 		master = peers.get(minId);
+	}
+
+	public void orderDone(long orderId) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }
