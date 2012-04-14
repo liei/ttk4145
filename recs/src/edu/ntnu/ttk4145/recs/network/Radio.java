@@ -18,6 +18,7 @@ public class Radio {
 	private AliveSender sender;
 	AliveListener listener;
 	private final static int ALIVE_INTERVAL = 1000; //ms
+	private final static int ALIVE_TIMEOUT = 5*ALIVE_INTERVAL;
 	
 	public Radio(String multicastGroup, int sendPort, int receivePort) {
 		this.sendPort = sendPort;
@@ -42,6 +43,10 @@ public class Radio {
 	
 	public static int getAliveInterval() {
 		return ALIVE_INTERVAL;
+	}
+	
+	public static int getAliveTimeout() {
+		return ALIVE_TIMEOUT;
 	}
 	
 	private class AliveListener implements Runnable{

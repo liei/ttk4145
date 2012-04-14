@@ -4,14 +4,21 @@ public class UpdateStateMessage extends Message{
 
 	private static final long serialVersionUID = 1684296774611243683L;
 
-	private Elevator state;
+	private Elevator.State state;
+
+	private long elevatorId;
 	
-	public UpdateStateMessage(Elevator state) {
+	public UpdateStateMessage(long elevatorId, Elevator.State state) {
 		super(Type.STATE);
 		this.state = state;
+		this.elevatorId = elevatorId;
 	}
 	
-	public Elevator getState(){
+	public Elevator.State getState(){
 		return state;
+	}
+	
+	public long getElevatorId() {
+		return elevatorId;
 	}
 }

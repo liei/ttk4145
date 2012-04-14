@@ -17,4 +17,18 @@ public class Order {
 		this.call = call;
 		this.floor = floor;
 	}
+	
+	public long getId() {
+		return this.id;
+	}
+
+	public Call getCall() {
+		return call;
+	}
+
+	public int getFloor() {
+		return floor;
+	}
+	
+
 }

@@ -186,6 +186,9 @@ public class Elevator {
 		
 		private int floor;
 	}
-	
-	
+
+	public State getState() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
