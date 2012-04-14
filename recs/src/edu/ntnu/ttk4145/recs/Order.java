@@ -15,4 +15,18 @@ public class Order {
 		this.dir = dir;
 		this.floor = floor;
 	}
+	
+	public long getId() {
+		return this.id;
+	}
+
+	public Direction getDir() {
+		return dir;
+	}
+
+	public int getFloor() {
+		return floor;
+	}
+	
+
 }
