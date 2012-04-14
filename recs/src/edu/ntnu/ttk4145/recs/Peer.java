@@ -20,6 +20,8 @@ public class Peer {
 	private long id;
 	private Socket socket = null;
 	ObjectOutputStream messageStream = null;
+	private int numOrders;
+	private Elevator.State state;
 	
 	public Peer(InetAddress address, long id) {
 		ip = address;
@@ -66,6 +68,14 @@ public class Peer {
 	
 	public long getId() {
 		return id;
+	}
+	
+	public InetAddress getInetAddress() {
+		return ip;
+	}
+	
+	public void updateState(Elevator.State newState) {
+		this.state = newState;
 	}
 	
 }
