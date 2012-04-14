@@ -45,6 +45,8 @@ public class Manager {
 	
 	private Manager(){
 		peers = new TreeMap<Long,Peer>();
+		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
+		radio.start();
 		MessageListener peerListener = new MessageListener();
 		peerListener.listen();
 		discoverMaster();
@@ -89,7 +91,7 @@ public class Manager {
 	}
 
 	public void registerCall(Button button, int floor) {
-		// TODO Auto-generated method stub
+		//TODO: implement this.
 		
 	}
 	
