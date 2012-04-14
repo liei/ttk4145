@@ -8,7 +8,7 @@ public class UpdateStateMessage extends Message{
 
 	private long elevatorId;
 	
-	public UpdateStateMessage(Elevator.State state, long elevatorId) {
+	public UpdateStateMessage(long elevatorId, Elevator.State state) {
 		super(Type.STATE);
 		this.state = state;
 		this.elevatorId = elevatorId;
