@@ -61,6 +61,14 @@ public class Elevator {
 		
 	}
 	
+	public Elevator.State getState() {
+		return new State();
+	}
+	
+	public static class State {
+		
+	}
+	
 //	Thread elevator;
 //	private boolean running;
 //	
