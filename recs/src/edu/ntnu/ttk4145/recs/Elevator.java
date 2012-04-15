@@ -7,6 +7,7 @@ import java.io.StringWriter;
 
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
+import edu.ntnu.ttk4145.recs.driver.RecsDriver;
 import edu.ntnu.ttk4145.recs.manager.Manager;
 
 public class Elevator {
@@ -32,6 +33,15 @@ public class Elevator {
 		this.id = id;
 	}
 
+	public void init(){
+		Driver driver = Driver.makeInstance(RecsDriver.class);
+		while(driver.getFloorSensorState() != 0){
+			driver.setSpeed(Direction.DOWN.speed);
+		}
+		driver.setSpeed(Direction.NONE.speed);
+		driver.startCallbacks();
+	}
+	
 	public long getId() {
 		return id;
 	}
