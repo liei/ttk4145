@@ -173,6 +173,15 @@ public abstract class Driver {
 			io_clear_bit(LAMP_CHANNELS[button.ordinal()][floor]);
 		}
 	}
+	
+	public int getFloorSensorState(){
+		for(int floor = 0; floor < NUMBER_OF_FLOORS; floor++){
+			if(io_read_bit(SIGNAL_CHANNELS[SignalType.SENSOR.ordinal()][floor]) == 1){
+				return floor;
+			}
+		}
+		return -1;
+	}
 
 	public void resetAllLamps() {
 		setStopLamp(false);

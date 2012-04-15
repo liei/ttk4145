@@ -11,10 +11,7 @@ public class Recs {
 	
 	public static void main(String[] args) {
 		
-		
-		Driver driver = Driver.makeInstance(RecsDriver.class);
-		driver.startCallbacks();
-		Elevator.getLocalElevator();
+		Elevator.getLocalElevator().init();
 		
 		Manager.getInstance();
 	

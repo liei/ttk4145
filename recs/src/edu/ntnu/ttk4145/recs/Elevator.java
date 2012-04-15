@@ -7,6 +7,7 @@ import java.io.StringWriter;
 
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
+import edu.ntnu.ttk4145.recs.driver.RecsDriver;
 import edu.ntnu.ttk4145.recs.manager.Manager;
 
 public class Elevator {
@@ -20,7 +21,6 @@ public class Elevator {
 	public static Elevator getLocalElevator(){
 		if(localInstance == null){
 			localInstance = new Elevator(Util.makeLocalId());
-			localInstance.updateElevatorState();
 		}
 		return localInstance;
 	}
@@ -29,14 +29,23 @@ public class Elevator {
 
 	private State state = new State();
 	
-	public Elevator(long id){
+	private Elevator(long id){
 		this.id = id;
+	}
+
+	public void init(){
+		Driver driver = Driver.makeInstance(RecsDriver.class);
+		while(driver.getFloorSensorState() != 0){
+			driver.setSpeed(Direction.DOWN.speed);
+		}
+		driver.setSpeed(Direction.NONE.speed);
+		driver.startCallbacks();
 	}
 	
 	public long getId() {
 		return id;
 	}
-
+	
 	public Elevator.State getState() {
 		return state;
 	}
@@ -49,6 +58,11 @@ public class Elevator {
 	public void setFloor(int floor, boolean arriving) {
 		if(arriving){
 			state.floor = floor;
+			if(state.floor == 0){
+				state.dir = Direction.UP;
+			} else if (state.floor == Driver.NUMBER_OF_FLOORS - 1){
+				state.dir = Direction.DOWN;
+			}
 		}
 		state.atFloor = arriving;
 		updateElevatorState();
@@ -85,7 +99,9 @@ public class Elevator {
 						Manager.getInstance().orderDone(orderId);
 					}
 					
+					System.out.printf("orders[%d][%d] = %d%n",state.dir.ordinal(),state.floor,state.orders[state.dir.ordinal()][state.floor]);
 					state.orders[state.dir.ordinal()][state.floor] = NO_ORDER;
+					System.out.printf("orders[%d][%d] = %d%n",Call.COMMAND.ordinal(),state.floor,state.orders[Call.COMMAND.ordinal()][state.floor]);
 					state.orders[Call.COMMAND.ordinal()][state.floor] = NO_ORDER;
 				}
 			}
@@ -171,7 +187,7 @@ public class Elevator {
 		
 		private Direction dir = Direction.DOWN;
 		
-		private int floor = 0;
+		private int floor = -1;
 		
 		private long[][] orders = new long[Call.values().length][Driver.NUMBER_OF_FLOORS];
 
