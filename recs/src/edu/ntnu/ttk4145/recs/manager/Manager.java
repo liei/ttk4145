@@ -5,9 +5,6 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -95,8 +92,8 @@ public class Manager {
 		Elevator.getLocalElevator().addOrder(new Order(button, floor));
 	}
 	
-	public void updateState(){
-		UpdateStateMessage updateStateMessage = new UpdateStateMessage(myId, Elevator.getLocalElevator().getState());
+	public void updateState(Elevator.State state){
+		UpdateStateMessage updateStateMessage = new UpdateStateMessage(myId, state);
 		for(Peer peer : peers.values()){
 			 peer.sendMessage(updateStateMessage);
 		}
