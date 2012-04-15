@@ -96,20 +96,36 @@ public class Manager {
 	}
 	
 	public void updateState(){
+		UpdateStateMessage updateStateMessage = new UpdateStateMessage(myId, Elevator.getLocalElevator().getState());
 		for(Peer peer : peers.values()){
-			peer.sendMessage(new UpdateStateMessage(myId, Elevator.getLocalElevator().getState()));
+			 peer.sendMessage(updateStateMessage);
 		}
 	}
 	
+	public void removePeer(Peer peer) {
+		if(peer == master) {
+			redistributeOrders(peer);
+			setMaster();
+		}
+		peers.remove(peer);
+	}
+	
+	private void redistributeOrders(Peer peer) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	public void discoverMaster() {
 		try {
 			//Wait to receive a few alive messages before we search list of peers for a master.
 			Thread.sleep(Radio.getAliveInterval());
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		setMaster();
+	}
+	
+	public void setMaster() {
 		master = peers.get(peers.firstKey());
 	}
 	
@@ -154,7 +170,6 @@ public class Manager {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			handleMessage(message);
@@ -177,17 +192,7 @@ public class Manager {
 		}
 	}
 	
-	public static void main(String[] args) throws SocketException {
-		
-		try {
-			InetAddress ip = InetAddress.getLocalHost();
-			System.out.println(Arrays.toString(ip.getAddress()));
-		} catch (UnknownHostException e) {
-			
-			e.printStackTrace();
-		}
-		
-		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
-		radio.start();
+	public static void main(String[] args) {
+		Manager manager = getInstance();
 	}
 }
