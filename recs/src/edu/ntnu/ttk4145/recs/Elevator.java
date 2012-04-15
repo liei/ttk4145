@@ -138,7 +138,7 @@ public class Elevator {
 		}
 		
 		updateElevatorHardware();
-		Manager.getInstance().updateState(state);
+		Manager.getInstance().updateState();
 	}
 	
 	private void letPeopleOnOff() {
