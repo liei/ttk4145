@@ -48,6 +48,11 @@ public class Elevator {
 	public void setFloor(int floor, boolean arriving) {
 		if(arriving){
 			state.floor = floor;
+			if(state.floor == 0){
+				state.dir = Direction.UP;
+			} else if (state.floor == Driver.NUMBER_OF_FLOORS - 1){
+				state.dir = Direction.DOWN;
+			}
 		}
 		state.atFloor = arriving;
 		updateElevatorState();
@@ -84,9 +89,9 @@ public class Elevator {
 						Manager.getInstance().orderDone(orderId);
 					}
 					
-					System.out.printf("orders[%d][%d] = %d",state.dir.ordinal(),state.floor,state.orders[state.dir.ordinal()][state.floor]);
+					System.out.printf("orders[%d][%d] = %d%n",state.dir.ordinal(),state.floor,state.orders[state.dir.ordinal()][state.floor]);
 					state.orders[state.dir.ordinal()][state.floor] = NO_ORDER;
-					System.out.printf("orders[%d][%d] = %d",Call.COMMAND.ordinal(),state.floor,state.orders[Call.COMMAND.ordinal()][state.floor]);
+					System.out.printf("orders[%d][%d] = %d%n",Call.COMMAND.ordinal(),state.floor,state.orders[Call.COMMAND.ordinal()][state.floor]);
 					state.orders[Call.COMMAND.ordinal()][state.floor] = NO_ORDER;
 				}
 			}
