@@ -92,7 +92,11 @@ public class Manager {
 
 	public void registerCall(Call button, int floor) {
 		// TODO: Implement this right!
-		Elevator.getLocalElevator().addOrder(new Order(button, floor));
+		Order order = new Order(button, floor);
+		Elevator.getLocalElevator().addOrder(order);
+//		for (Peer peer : peers.values()) {
+//			peer.sendMessage(new OrderMessage(order));
+//		}
 	}
 	
 	public void updateState(Elevator.State state){
@@ -103,15 +107,26 @@ public class Manager {
 	}
 	
 	public void removePeer(Peer peer) {
-		if(peer == master) {
-			redistributeOrders(peer);
-			setMaster();
-		}
 		peers.remove(peer);
+		if(peer == master) {
+			setMaster();
+			if(master.getId() == myId) {
+				redistributeOrders(peer);
+			}
+		}
 	}
 	
-	private void redistributeOrders(Peer peer) {
-		// TODO Auto-generated method stub
+	private void redistributeOrders(Peer deadPeer) {
+		Peer bestSuited = null;
+		double maxOrderRating = 0;
+		for(Order order : deadPeer.getOrders()) {
+			for(Peer peer : peers.values()) {
+				if(maxOrderRating < peer.getOrderRating(order)) {
+					bestSuited = peer;
+				}
+			bestSuited.sendMessage(new OrderMessage(order));	
+			}
+		}
 		
 	}
 

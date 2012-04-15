@@ -13,11 +13,15 @@ public class Order {
 	public final int floor;
 	
 	public Order(Call call, int floor){
-		this.id = (Elevator.getLocalElevator().getId() & 0xff00) + (counter++);
-		this.call = call;
-		this.floor = floor;
+		this(call,floor,Elevator.getLocalElevator().getId() & 0xff00 + counter++);
 	}
 	
+	public Order(Call call, int floor, long id) {
+		this.call = call;
+		this.floor = floor;
+		this.id = id;
+	}
+
 	public long getId() {
 		return this.id;
 	}
