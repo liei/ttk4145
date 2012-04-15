@@ -42,13 +42,16 @@ public class Manager {
 	
 	private Manager(){
 		peers = new TreeMap<Long,Peer>();
+	}
+
+	public void startManager(){
 		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
 		radio.start();
 		MessageListener peerListener = new MessageListener();
 		peerListener.listen();
-		discoverMaster();
+		discoverMaster();		
 	}
-
+	
 	public void updatePeer(long id, long timeOfLastAlive, InetAddress address) {
 		if(peers.containsKey(id)) {
 			peers.get(id).updateAliveTime(timeOfLastAlive);
@@ -133,13 +136,13 @@ public class Manager {
 	private class MessageListener {
 		
 		private ServerSocket server = null;
+		
 		public MessageListener() {
 			try {
 				server = new ServerSocket(RECEIVE_PORT);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			listen();
 		}
 		
 		private void listen() {
