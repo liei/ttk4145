@@ -20,7 +20,6 @@ public class Elevator {
 	public static Elevator getLocalElevator(){
 		if(localInstance == null){
 			localInstance = new Elevator(Util.makeLocalId());
-			localInstance.updateElevatorState();
 		}
 		return localInstance;
 	}
@@ -29,14 +28,14 @@ public class Elevator {
 
 	private State state = new State();
 	
-	public Elevator(long id){
+	private Elevator(long id){
 		this.id = id;
 	}
-	
+
 	public long getId() {
 		return id;
 	}
-
+	
 	public Elevator.State getState() {
 		return state;
 	}
@@ -85,7 +84,9 @@ public class Elevator {
 						Manager.getInstance().orderDone(orderId);
 					}
 					
+					System.out.printf("orders[%d][%d] = %d",state.dir.ordinal(),state.floor,state.orders[state.dir.ordinal()][state.floor]);
 					state.orders[state.dir.ordinal()][state.floor] = NO_ORDER;
+					System.out.printf("orders[%d][%d] = %d",Call.COMMAND.ordinal(),state.floor,state.orders[Call.COMMAND.ordinal()][state.floor]);
 					state.orders[Call.COMMAND.ordinal()][state.floor] = NO_ORDER;
 				}
 			}
@@ -171,7 +172,7 @@ public class Elevator {
 		
 		private Direction dir = Direction.DOWN;
 		
-		private int floor = 0;
+		private int floor = -1;
 		
 		private long[][] orders = new long[Call.values().length][Driver.NUMBER_OF_FLOORS];
 
