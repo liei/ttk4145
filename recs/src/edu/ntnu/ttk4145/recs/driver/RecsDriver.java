@@ -7,7 +7,7 @@ public class RecsDriver extends Driver {
 
 	@Override
 	protected void buttonPressed(Call call, int floor) {
-		
+		System.out.printf("RecsDriver.buttonPressed(%s,%d)%n",call,floor);
 		Manager manager = Manager.getInstance();
 		switch(call){
 		case UP:
@@ -24,6 +24,7 @@ public class RecsDriver extends Driver {
 
 	@Override
 	protected void floorSensorTriggered(int floor, boolean arriving) {
+		System.out.printf("RecsDriver.floorSensorTriggered(%d,%b)%n",floor,arriving);
 		Elevator elev = Elevator.getLocalElevator();
 		elev.setFloor(floor,arriving);
 	}
@@ -34,6 +35,7 @@ public class RecsDriver extends Driver {
 	
 	@Override
 	protected void stopButtonPressed(boolean pressed) {
+		System.out.printf("RecsDriver.stopButtonPressed(%b)%n",pressed);
 		Elevator elev = Elevator.getLocalElevator();
 		if(pressed){
 			stopPressed = System.currentTimeMillis();
@@ -47,6 +49,7 @@ public class RecsDriver extends Driver {
 
 	@Override
 	protected void obstructionSensorTriggered(boolean enabled) {
+		System.out.printf("RecsDriver.obstructionSensorTriggered(%b)%n",enabled);
 		Elevator elev = Elevator.getLocalElevator();
 		elev.setObstructed(enabled);
 	}
