@@ -11,7 +11,8 @@ public class TestDriver extends Driver{
 	}
 	
 	@Override
-	protected void stopButtonPressed() {
+	protected void stopButtonPressed(boolean stopButtonPressed) {
+		//TODO: Use this parameter for something useful.
 		setStopLamp(true);
 		System.out.println("Stop button pushed");
 	}
