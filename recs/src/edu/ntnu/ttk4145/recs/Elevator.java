@@ -146,7 +146,7 @@ public class Elevator {
 	}
 
 	public static enum Direction {
-		UP(1000), DOWN(-1000), NONE(0);
+		UP(500), DOWN(-500), NONE(0);
 		
 		private int speed;
 		
