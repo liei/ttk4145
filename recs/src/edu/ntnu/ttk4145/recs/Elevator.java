@@ -20,6 +20,7 @@ public class Elevator {
 	public static Elevator getLocalElevator(){
 		if(localInstance == null){
 			localInstance = new Elevator(Util.makeLocalId());
+			localInstance.updateElevatorState();
 		}
 		return localInstance;
 	}
@@ -170,14 +171,14 @@ public class Elevator {
 		
 		private Direction dir = Direction.DOWN;
 		
-		private int floor;
+		private int floor = 0;
 		
 		private long[][] orders = new long[Call.values().length][Driver.NUMBER_OF_FLOORS];
 
-		private boolean atFloor;
-		private boolean stopped;
-		private boolean obstructed;
-		private boolean doorsOpen;
+		private boolean atFloor = false;
+		private boolean stopped = false;
+		private boolean obstructed = false;
+		private boolean doorsOpen = false;
 		
 		public Direction getDirection(){
 			return dir;
