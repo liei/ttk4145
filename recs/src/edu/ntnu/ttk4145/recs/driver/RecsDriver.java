@@ -6,17 +6,18 @@ import edu.ntnu.ttk4145.recs.manager.Manager;
 public class RecsDriver extends Driver {
 
 	@Override
-	protected void buttonPressed(Button button, int floor) {
+	protected void buttonPressed(Call call, int floor) {
 		
-		switch(button){
+		Manager manager = Manager.getInstance();
+		switch(call){
 		case UP:
+			manager.registerCall(call, floor);
 		case DOWN:
-			Manager manager = Manager.getInstance();
-			manager.registerCall(button,floor);
+			manager.registerCall(call,floor);
 			break;
 		case COMMAND:
 			Elevator elev = Elevator.getLocalElevator();
-			elev.addOrder(button,floor);
+			elev.addOrder(call,floor);
 			break;
 		}
 	}
@@ -24,18 +25,19 @@ public class RecsDriver extends Driver {
 	@Override
 	protected void floorSensorTriggered(int floor, boolean arriving) {
 		Elevator elev = Elevator.getLocalElevator();
+		elev.setFloor(floor,arriving);
 	}
 
 	@Override
 	protected void stopButtonPressed() {
 		Elevator elev = Elevator.getLocalElevator();
-		
+		elev.setStopped(true);
 	}
 
 	@Override
 	protected void obstructionSensorTriggered(boolean enabled) {
-		// TODO Auto-generated method stub
-		
+		Elevator elev = Elevator.getLocalElevator();
+		elev.setObstructed(enabled);
 	}
 
 }

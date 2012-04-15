@@ -19,7 +19,7 @@ import edu.ntnu.ttk4145.recs.OrderMessage;
 import edu.ntnu.ttk4145.recs.Peer;
 import edu.ntnu.ttk4145.recs.UpdateStateMessage;
 import edu.ntnu.ttk4145.recs.Util;
-import edu.ntnu.ttk4145.recs.driver.Driver.Button;
+import edu.ntnu.ttk4145.recs.driver.Driver.Call;
 import edu.ntnu.ttk4145.recs.network.Radio;
 
 public class Manager {
@@ -90,9 +90,8 @@ public class Manager {
 		return RECEIVE_PORT;
 	}
 
-	public void registerCall(Button button, int floor) {
-		//TODO: implement this.
-		
+	public void registerCall(Call button, int floor) {
+		// TODO Auto-generated method stub
 	}
 	
 	public void updateState(){
@@ -127,6 +126,11 @@ public class Manager {
 	
 	public void setMaster() {
 		master = peers.get(peers.firstKey());
+	}
+
+	public void orderDone(long orderId) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	private class MessageListener {
