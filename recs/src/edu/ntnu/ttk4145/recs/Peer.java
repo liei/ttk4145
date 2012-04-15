@@ -33,23 +33,15 @@ public class Peer {
 		}
 	}
 	
-	/**
-	 * 
-	 * @param msg
-	 * @return true if the peer is alive.
-	 */
-	public boolean sendMessage(Message msg){
+	public void sendMessage(Message msg){
 		if(hasTimedOut()) {
-			return false;
+			Manager.getInstance().removePeer(this);
 		}
 		try {
 			messageStream.writeObject(msg);
-			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-				
-		return true;
 	}
 	
 	public void updateAliveTime(long timeOfLastAlive) {
@@ -75,6 +67,10 @@ public class Peer {
 	
 	public void updateState(Elevator.State newState) {
 		this.state = newState;
+	}
+	
+	public Elevator.State getState() {
+		return state;
 	}
 	
 }
