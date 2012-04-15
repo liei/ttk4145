@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import edu.ntnu.ttk4145.recs.DoOrderMessage;
 import edu.ntnu.ttk4145.recs.Elevator;
 import edu.ntnu.ttk4145.recs.Message;
 import edu.ntnu.ttk4145.recs.Order;
@@ -71,6 +72,9 @@ public class Manager {
 	
 	private void addOrder(Order order) {
 		orders.put(order.getId(), order);
+		if(master.getId() == myId) {
+			dispatchOrder(order);
+		}
 	}
 	
 	private void removeOrder(Order order) {
@@ -91,12 +95,11 @@ public class Manager {
 	}
 
 	public void registerCall(Call button, int floor) {
-		// TODO: Implement this right!
 		Order order = new Order(button, floor);
-		Elevator.getLocalElevator().addOrder(order);
-//		for (Peer peer : peers.values()) {
-//			peer.sendMessage(new OrderMessage(order));
-//		}
+		//Elevator.getLocalElevator().addOrder(order);
+		for (Peer peer : peers.values()) {
+			peer.sendMessage(new DoOrderMessage(order));
+		}
 	}
 	
 	public void updateState(Elevator.State state){
@@ -116,21 +119,34 @@ public class Manager {
 		}
 	}
 	
-	private void redistributeOrders(Peer deadPeer) {
+	/**
+	 * This peer has died and his orders are distributed to the other peers.
+	 * @param peer Dead peer.
+	 */
+	private void redistributeOrders(Peer peer) {
+		
+		for(Order order : peer.getOrders()) {
+			dispatchOrder(order);
+		}
+	}
+	
+	/**
+	 * 
+	 * Finds the peer best suited to perform Order and dispatches the order.
+	 * @param order An order to perform
+	 */
+	private void dispatchOrder(Order order) {
 		Peer bestSuited = null;
 		double maxOrderRating = 0;
-		for(Order order : deadPeer.getOrders()) {
-			for(Peer peer : peers.values()) {
-				if(maxOrderRating < peer.getOrderRating(order)) {
-					bestSuited = peer;
-				}
-			bestSuited.sendMessage(new OrderMessage(order));	
+		for(Peer peer : peers.values()) {
+			if(maxOrderRating < peer.getOrderRating(order)) {
+				bestSuited = peer;
 			}
+		bestSuited.sendMessage(new DoOrderMessage(order));	
 		}
-		
 	}
 
-	public void discoverMaster() {
+	private void discoverMaster() {
 		try {
 			//Wait to receive a few alive messages before we search list of peers for a master.
 			Thread.sleep(Radio.getAliveInterval());
@@ -140,7 +156,7 @@ public class Manager {
 		setMaster();
 	}
 	
-	public void setMaster() {
+	private void setMaster() {
 		master = peers.get(peers.firstKey());
 	}
 
@@ -197,6 +213,10 @@ public class Manager {
 			switch(message.getType()) {
 				case ORDER: 
 					Manager.getInstance().addOrder(((OrderMessage) message).getOrder());
+					break;
+				case DO_ORDER:
+					DoOrderMessage doOrderMessage = (DoOrderMessage) message;
+					Elevator.getLocalElevator().addOrder(doOrderMessage.getOrder());
 					break;
 				case DONE:
 					Manager.getInstance().removeOrder(((OrderMessage) message).getOrder());
