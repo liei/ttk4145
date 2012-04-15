@@ -130,7 +130,7 @@ public class Manager {
 	}
 
 	public void orderDone(long orderId) {
-		System.out.printf("Order done: %d",orderId);
+		System.out.printf("Order done: %d%n",orderId);
 	}
 	
 	private class MessageListener {

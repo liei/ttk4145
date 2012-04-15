@@ -1,6 +1,10 @@
 package edu.ntnu.ttk4145.recs;
 
 import static edu.ntnu.ttk4145.recs.Order.NO_ORDER;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
 import edu.ntnu.ttk4145.recs.manager.Manager;
@@ -106,7 +110,10 @@ public class Elevator {
 				state.dir = state.dir; // noop, continue the way you were going.
 				state.atFloor = false;
 			}
-		} 
+		}
+		
+		System.out.println(state);
+		
 		updatePhysicalElevator();
 		Manager.getInstance().updateState(state);
 	}
@@ -146,7 +153,7 @@ public class Elevator {
 	}
 
 	public static enum Direction {
-		UP(500), DOWN(-500), NONE(0);
+		UP(100), DOWN(-100), NONE(0);
 		
 		private int speed;
 		
@@ -194,6 +201,23 @@ public class Elevator {
 		
 		public boolean isDoorsOpen(){
 			return doorsOpen;
+		}
+		
+		public String toString(){
+			StringWriter sw = new StringWriter();
+			PrintWriter  pw = new PrintWriter(sw);
+			
+			pw.printf("dir: %s, floor: %d, [at:%c,s:%c,o:%c,d:%c]%n",dir,floor,
+					atFloor ? '*':' ',stopped ? '*':' ',obstructed ? '*':' ',doorsOpen ? '*':' ');
+			
+			for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
+				pw.printf("%d: ",floor);
+				for(Call call : Call.values()){
+					pw.printf("%s: %d, ", call,orders[call.ordinal()][floor]);
+				}
+				pw.println();
+			}
+			return sw.toString();
 		}
 	}
 }
