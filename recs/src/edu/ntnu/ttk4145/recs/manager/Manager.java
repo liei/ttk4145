@@ -91,7 +91,8 @@ public class Manager {
 	}
 
 	public void registerCall(Call button, int floor) {
-		// TODO Auto-generated method stub
+		// TODO: Implement this right!
+		Elevator.getLocalElevator().addOrder(new Order(button, floor));
 	}
 	
 	public void updateState(Elevator.State state){
@@ -113,8 +114,7 @@ public class Manager {
 	}
 
 	public void orderDone(long orderId) {
-		// TODO Auto-generated method stub
-		
+		System.out.printf("Order done: %l",orderId);
 	}
 	
 	private class MessageListener {

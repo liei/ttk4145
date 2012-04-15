@@ -4,7 +4,7 @@ import edu.ntnu.ttk4145.recs.driver.Driver.Call;
 
 public class Order {
 
-	public static final int NO_ORDER = 0;
+	public static final long NO_ORDER = 0;
 	
 	private static int counter = 0;
 	

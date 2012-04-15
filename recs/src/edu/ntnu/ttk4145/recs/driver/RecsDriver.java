@@ -11,7 +11,7 @@ public class RecsDriver extends Driver {
 		Manager manager = Manager.getInstance();
 		switch(call){
 		case UP:
-			manager.registerCall(call, floor);
+			manager.registerCall(call,floor);
 		case DOWN:
 			manager.registerCall(call,floor);
 			break;
