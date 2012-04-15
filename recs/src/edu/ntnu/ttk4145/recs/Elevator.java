@@ -210,7 +210,7 @@ public class Elevator {
 			pw.printf("dir: %s, floor: %d, [at:%c,s:%c,o:%c,d:%c]%n",dir,floor,
 					atFloor ? '*':' ',stopped ? '*':' ',obstructed ? '*':' ',doorsOpen ? '*':' ');
 			
-			for(int floor = Driver.NUMBER_OF_FLOORS; floor >= 0; floor--){
+			for(int floor = Driver.NUMBER_OF_FLOORS - 1; floor >= 0; floor--){
 				pw.printf("%d: ",floor+1);
 				for(Call call : Call.values()){
 					pw.printf("%s: %d, ", call,orders[call.ordinal()][floor]);
