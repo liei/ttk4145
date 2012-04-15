@@ -157,7 +157,7 @@ public class Elevator {
 	
 	public static class State{
 		
-		private Direction dir;
+		private Direction dir = Direction.NONE;
 		
 		private int floor;
 		
