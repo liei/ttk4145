@@ -220,9 +220,7 @@ public abstract class Driver {
 									floorSensorTriggered(floor, value);
 									break;
 								case STOP:
-									if(value){
-										stopButtonPressed();
-									}
+									stopButtonPressed(value);
 									break;
 								case OBSTRUCTION:
 									obstructionSensorTriggered(value);
@@ -254,7 +252,7 @@ public abstract class Driver {
 	
 	protected abstract void floorSensorTriggered(int floor, boolean arriving);
 	
-	protected abstract void stopButtonPressed();
+	protected abstract void stopButtonPressed(boolean pressed);
 	
 	protected abstract void obstructionSensorTriggered(boolean enabled);
 	

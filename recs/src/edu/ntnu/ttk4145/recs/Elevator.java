@@ -35,6 +35,10 @@ public class Elevator {
 	public long getId() {
 		return id;
 	}
+
+	public Elevator.State getState() {
+		return state;
+	}
 	
 	public void setObstructed(boolean obstructed) {
 		state.obstructed = obstructed;
