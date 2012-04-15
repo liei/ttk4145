@@ -88,6 +88,7 @@ public abstract class Driver {
 			System.out.println("io failed to initialize, exiting.");
 			System.exit(1);
 		}
+		clearElevatorState();
 	}
 
 	private native int io_init();
@@ -174,7 +175,6 @@ public abstract class Driver {
 	}
 
 	public void resetAllLamps() {
-		setSpeed(0);
 		setStopLamp(false);
 		setDoorOpenLamp(false);
 		for(int floor = 0; floor < NUMBER_OF_FLOORS; floor++){
@@ -182,6 +182,11 @@ public abstract class Driver {
 			setButtonLamp(Call.UP,floor,false);
 			setButtonLamp(Call.COMMAND,floor,false);
 		}
+	}
+	
+	public void clearElevatorState(){
+		resetAllLamps();
+		setSpeed(0);
 	}
 	
 	private Thread callback;
