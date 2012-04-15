@@ -5,9 +5,6 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -45,13 +42,16 @@ public class Manager {
 	
 	private Manager(){
 		peers = new TreeMap<Long,Peer>();
+	}
+
+	public void startManager(){
 		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
 		radio.start();
 		MessageListener peerListener = new MessageListener();
 		peerListener.listen();
-		discoverMaster();
+		discoverMaster();		
 	}
-
+	
 	public void updatePeer(long id, long timeOfLastAlive, InetAddress address) {
 		if(peers.containsKey(id)) {
 			peers.get(id).updateAliveTime(timeOfLastAlive);
@@ -91,11 +91,12 @@ public class Manager {
 	}
 
 	public void registerCall(Call button, int floor) {
-		// TODO Auto-generated method stub
+		// TODO: Implement this right!
+		Elevator.getLocalElevator().addOrder(new Order(button, floor));
 	}
 	
-	public void updateState(){
-		UpdateStateMessage updateStateMessage = new UpdateStateMessage(myId, Elevator.getLocalElevator().getState());
+	public void updateState(Elevator.State state){
+		UpdateStateMessage updateStateMessage = new UpdateStateMessage(myId, state);
 		for(Peer peer : peers.values()){
 			 peer.sendMessage(updateStateMessage);
 		}
@@ -129,20 +130,19 @@ public class Manager {
 	}
 
 	public void orderDone(long orderId) {
-		// TODO Auto-generated method stub
-		
+		System.out.printf("Order done: %d%n",orderId);
 	}
 	
 	private class MessageListener {
 		
 		private ServerSocket server = null;
+		
 		public MessageListener() {
 			try {
 				server = new ServerSocket(RECEIVE_PORT);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			listen();
 		}
 		
 		private void listen() {
