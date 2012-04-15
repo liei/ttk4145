@@ -22,7 +22,7 @@ public class Elevator {
 
 	private long id;
 
-	private State state;
+	private State state = new State();
 	
 	public Elevator(long id){
 		this.id = id;
