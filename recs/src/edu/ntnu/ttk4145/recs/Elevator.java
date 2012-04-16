@@ -99,6 +99,9 @@ public class Elevator {
 					}
 				}
 
+				System.out.printf("elevid: %d%n",id);
+				System.out.printf("callsOver: %b, callsUnder: %b%n",callsOver,callsUnder);
+				
 				if((callsOver || callUp) && !(callsUnder || callDown)){
 					state.dir = Direction.UP;
 				} else if((callsUnder || callDown) && !(callsOver || callUp)){
