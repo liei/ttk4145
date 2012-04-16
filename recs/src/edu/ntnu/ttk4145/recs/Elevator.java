@@ -36,9 +36,12 @@ public class Elevator {
 	public void init(){
 		Driver driver = Driver.makeInstance(RecsDriver.class);
 		while(driver.getFloorSensorState() != 0){
-			driver.setSpeed(Direction.DOWN.speed);
+			driver.setSpeed(-1000);
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {}
 		}
-		driver.setSpeed(Direction.NONE.speed);
+		driver.setSpeed(0);
 		driver.startCallbacks();
 	}
 	
@@ -58,11 +61,6 @@ public class Elevator {
 	public void setFloor(int floor, boolean arriving) {
 		if(arriving){
 			state.floor = floor;
-			if(state.floor == 0){
-				state.dir = Direction.UP;
-			} else if (state.floor == Driver.NUMBER_OF_FLOORS - 1){
-				state.dir = Direction.DOWN;
-			}
 		}
 		state.atFloor = arriving;
 		updateElevatorState();
@@ -88,6 +86,29 @@ public class Elevator {
 		if(state.stopped || state.obstructed || state.doorsOpen){
 			;
 		} else {
+			boolean callsOver  = false;
+			boolean callsUnder = false;
+			boolean callsHere = true;
+			for(Call call : Call.values()){
+				for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
+					if(state.orders[call.ordinal()][floor] != NO_ORDER){
+						if(floor > state.floor){
+							callsOver = true;
+						} else if (floor < state.floor){
+							callsUnder = true;
+						} else {
+							callsHere = true;
+						}
+					}
+				}
+			}
+			
+			if(callsHere){
+				if(state.dir == Direction.UP && !callsOver){
+					state.dir = Direction.DOWN;
+				}
+			}
+			
 			if(state.atFloor) {
 				// Stopped at a floor
 				long orderId = state.orders[state.dir.ordinal()][state.floor];
@@ -106,25 +127,13 @@ public class Elevator {
 				}
 			}
 			
-			int callsOver = 0;
-			int callsUnder = 0;
-			for(Call call : Call.values()){
-				for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
-					if(state.orders[call.ordinal()][floor] != NO_ORDER){
-						if(floor > state.floor){
-							callsOver++;
-						} else if (floor < state.floor){
-							callsUnder++;
-						}
-					}
-				}
-			}
-			if(callsOver == 0 && callsUnder == 0){
+
+			if(!callsOver && !callsUnder){
 				state.dir = Direction.NONE;
-			} else if (callsOver  > 0 && callsUnder == 0){
+			} else if (callsOver && callsUnder){
 				state.dir = Direction.UP;
 				state.atFloor = false;
-			} else if (callsUnder > 0 && callsOver  == 0){
+			} else if (callsUnder && !callsOver){
 				state.dir = Direction.DOWN;
 				state.atFloor = false;
 			} else {
