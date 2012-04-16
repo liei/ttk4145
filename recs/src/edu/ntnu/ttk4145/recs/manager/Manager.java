@@ -175,9 +175,6 @@ public class Manager {
 	 */
 	private void redistributeOrders(Peer peer) {
 		
-		for(Order order : peer.getOrders()) {
-			dispatchOrder(order);
-		}
 	}
 	
 	/**
@@ -282,7 +279,7 @@ public class Manager {
 					break;
 				case DO_ORDER:
 					DoOrderMessage doOrderMessage = (DoOrderMessage) message;
-					Elevator.getLocalElevator().addOrder(doOrderMessage.getOrder());
+//					Elevator.getLocalElevator().addOrder(doOrderMessage.getOrder());
 					break;
 				case DONE:
 					Manager.getInstance().removeOrder(((OrderMessage) message).getOrder());
@@ -299,5 +296,9 @@ public class Manager {
 
 	public synchronized long[][] getOrders() {
 		return Util.copyOf(orders);
+	}
+
+	public void orderDone(Direction dir, int floor) {
+		orders[dir.ordinal()][floor] = Order.NO_ORDER;
 	}
 }
