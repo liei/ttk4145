@@ -76,34 +76,40 @@ public class Elevator {
 		updateElevatorState();
 	}
 	
-	private synchronized void updateElevatorState(){
+	public synchronized void updateElevatorState(){
 		
 		if(state.stopped || state.obstructed || state.doorsOpen){
 			;
 		} else {
-			long[][] orders = Manager.getInstance().getOrders();
-			boolean callsOver  = orders[Direction.UP.ordinal()][state.floor] == id;
-			boolean callsUnder = orders[Direction.DOWN.ordinal()][state.floor] == id;
-			for(int i = 0; i < orders.length; i++){
-				for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
-					if(orders[i][floor] == id || state.commands[floor]){
-						if(floor > state.floor){
-							callsOver = true;
-						} else if (floor < state.floor){
-							callsUnder = true;
-						} 
-					}
-				}
-			}
-			
-			if(callsOver && !callsUnder){
-				state.dir = Direction.UP;
-			} else if(callsUnder && !callsOver){
-				state.dir = Direction.DOWN;
-			} 
-			
+
 			if(state.atFloor) {
 				// Stopped at a floor
+				long[][] orders = Manager.getInstance().getOrders();
+				boolean callsOver  = orders[Direction.UP.ordinal()][state.floor] == id;
+				boolean callsUnder = orders[Direction.DOWN.ordinal()][state.floor] == id;
+				for(int i = 0; i < orders.length; i++){
+					for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
+						if(orders[i][floor] == id || state.commands[floor]){
+							if(floor > state.floor){
+								callsOver = true;
+							} else if (floor < state.floor){
+								callsUnder = true;
+							} 
+						}
+					}
+				}
+
+				if(callsOver && !callsUnder){
+					state.dir = Direction.UP;
+				} else if(callsUnder && !callsOver){
+					state.dir = Direction.DOWN;
+				} 
+
+				if(callsOver || callsUnder){
+					state.atFloor = false;
+				} else {
+					state.dir = Direction.NONE;
+				} 
 				
 				long orderId = orders[state.dir.ordinal()][state.floor];
 				
@@ -119,6 +125,7 @@ public class Elevator {
 					Manager.getInstance().orderDone(state.dir,state.floor);
 					state.commands[state.floor] = false;
 				}
+				
 			}
 		}
 		
