@@ -85,8 +85,10 @@ public class Elevator {
 			if(state.atFloor) {
 				// Stopped at a floor
 				long[][] orders = Manager.getInstance().getOrders();
-				boolean callsOver  = orders[Direction.UP.ordinal()][state.floor] == id;
-				boolean callsUnder = orders[Direction.DOWN.ordinal()][state.floor] == id;
+				boolean callUp = orders[Direction.UP.ordinal()][state.floor] == id;
+				boolean callDown = orders[Direction.DOWN.ordinal()][state.floor] == id;
+				boolean callsOver  = false;
+				boolean callsUnder = false;
 				for(int i = 0; i < orders.length; i++){
 					for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
 						if(orders[i][floor] == id || state.commands[floor]){
@@ -99,33 +101,29 @@ public class Elevator {
 					}
 				}
 
-				if(callsOver && !callsUnder){
+				if((callsOver || callUp) && !(callsUnder || callDown)){
 					state.dir = Direction.UP;
-				} else if(callsUnder && !callsOver){
+				} else if((callsUnder || callDown) && !(callsOver || callUp)){
 					state.dir = Direction.DOWN;
 				} 
 
+				long orderId = orders[state.dir.ordinal()][state.floor];
+				
+				if(orderId == id || state.commands[state.floor]){
+					// Stop at this floor;
+					letPeopleOnOff();
+					
+					if(orderId == id){
+						Manager.getInstance().orderDone(state.dir,state.floor);
+					}
+					state.commands[state.floor] = false;
+				}
+					
 				if(callsOver || callsUnder){
 					state.atFloor = false;
-					long orderId = orders[state.dir.ordinal()][state.floor];
-					
-					if(orderId == id || state.commands[state.floor]){
-						// Stop at this floor;
-						letPeopleOnOff();
-						
-						if(orderId != NO_ORDER){
-							Manager.getInstance().orderDone(orderId);
-						}
-						
-						// TODO: reset orders in manager
-						Manager.getInstance().orderDone(state.dir,state.floor);
-						state.commands[state.floor] = false;
-					}
 				} else {
 					state.dir = Direction.NONE;
 				} 
-				
-				
 			}
 		}
 		
