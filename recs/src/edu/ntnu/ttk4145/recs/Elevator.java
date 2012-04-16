@@ -242,7 +242,7 @@ public class Elevator {
 				pw.printf("%d: ",floor+1);
 				pw.printf("%c ",orders[Direction.UP.ordinal()][floor] == id ? '↑' : ' ');
 				pw.printf("%c ",orders[Direction.DOWN.ordinal()][floor] == id ? '↓' : ' ');
-				pw.printf("%s: %d, ",commands[floor] ? '■' : ' ');
+				pw.printf("%c, ",commands[floor] ? '■' : ' ');
 				pw.println();
 			}
 			return sw.toString();
