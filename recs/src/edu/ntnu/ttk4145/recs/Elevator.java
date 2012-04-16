@@ -100,7 +100,7 @@ public class Elevator {
 				state.dir = Direction.UP;
 			} else if(callsUnder && !callsOver){
 				state.dir = Direction.DOWN;
-			}
+			} 
 			
 			if(state.atFloor) {
 				// Stopped at a floor
@@ -119,20 +119,6 @@ public class Elevator {
 					Manager.getInstance().orderDone(state.dir,state.floor);
 					state.commands[state.floor] = false;
 				}
-			}
-			
-
-			if(!callsOver && !callsUnder){
-				state.dir = Direction.NONE;
-			} else if (callsOver && callsUnder){
-				state.dir = Direction.UP;
-				state.atFloor = false;
-			} else if (callsUnder && !callsOver){
-				state.dir = Direction.DOWN;
-				state.atFloor = false;
-			} else {
-				state.dir = state.dir; // noop, continue the way you were going.
-				state.atFloor = false;
 			}
 		}
 		
