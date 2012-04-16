@@ -220,7 +220,7 @@ public abstract class Driver {
 							boolean value = io_read_bit(SIGNAL_CHANNELS[type.ordinal()][floor]) == 1;
 							
 							// If value has not changed, ignore.
-							if(value != previousValue[type.ordinal()][floor] || stopPressed != 0){
+							if(value != previousValue[type.ordinal()][floor] || type == SignalType.STOP){
 								switch(type){
 								case CALL_UP:
 									if(value)
@@ -240,7 +240,7 @@ public abstract class Driver {
 								case STOP:
 									if(value){
 										stopPressed = System.currentTimeMillis();
-									} else {
+									} else if (stopPressed != 0){
 										long now = System.currentTimeMillis();
 										if(now - stopPressed > stopButtonDelay){
 											stopButtonPressed();
