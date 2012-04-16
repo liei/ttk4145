@@ -10,6 +10,12 @@ import java.nio.ByteBuffer;
 import edu.ntnu.ttk4145.recs.Elevator;
 import edu.ntnu.ttk4145.recs.Util;
 import edu.ntnu.ttk4145.recs.manager.Manager;
+/**
+ * 
+ * The radio class is used to send and receive alive messages.
+ * The radio sends and listens to broadcasts to and from other peers.
+ * Two threads are spawned; one to listen and one to send. 
+ */
 public class Radio {
 	
 	private String multicastGroup;
@@ -20,6 +26,12 @@ public class Radio {
 	private final static int ALIVE_INTERVAL = 1000; //ms
 	private final static int ALIVE_TIMEOUT = 5*ALIVE_INTERVAL;
 	
+	/**
+	 * 
+	 * @param multicastGroup The multicast group used for UDP broadcasts.
+	 * @param sendPort The port to send UDP messages to.
+	 * @param receivePort The port used to receive messages.
+	 */
 	public Radio(String multicastGroup, int sendPort, int receivePort) {
 		this.sendPort = sendPort;
 		this.receivePort = receivePort;
@@ -28,27 +40,50 @@ public class Radio {
 		listener = new AliveListener();
 	}
 	
+	/**
+	 * Starts the radio, spawns two threads: to listen and send alive messages.
+	 */
 	public void start() {
 		new Thread(sender).start();
 		new Thread(listener).start();
 	}
 	
+	/**
+	 * Stops listening to alive messages.
+	 */
 	public void stopAliveListener() {
 		listener.stop();
 	}
 	
+	/**
+	 * Stop sending alive messages.
+	 */
 	public void stopAliveSender() {
 		sender.stop();
 	}
 	
+	/**
+	 * 
+	 * @return The interval between alive messages, in ms.
+	 */
 	public static int getAliveInterval() {
 		return ALIVE_INTERVAL;
 	}
 	
+	/**
+	 * 
+	 * @return The time until a peer is considered dead, timed out, in ms.
+	 */
 	public static int getAliveTimeout() {
 		return ALIVE_TIMEOUT;
 	}
 	
+	/**
+	 * 
+	 * Class used to listen for alive messages. Implements the runnable interface.
+	 * Must be started in its own thread.
+	 *
+	 */
 	private class AliveListener implements Runnable{
 		
 		private boolean running;
@@ -68,12 +103,12 @@ public class Radio {
 			
 			while(running){
 				DatagramPacket packet;
-				byte[] buf = new byte[256];
-				packet = new DatagramPacket(buf, buf.length);
+				byte[] buffer = new byte[256];
+				packet = new DatagramPacket(buffer, buffer.length);
 				try {
 					socket.receive(packet);
-					long id = parseMessage(packet);
-					Manager.getInstance().updatePeer(id, System.currentTimeMillis(), packet.getAddress());
+					long peerId = parseMessage(packet);
+					Manager.getInstance().handleAliveMessage(peerId, System.currentTimeMillis(), packet.getAddress());
 				} catch (IOException e) {
 					continue;
 				}
@@ -86,17 +121,32 @@ public class Radio {
 				ioe.printStackTrace();
 			}
 		}
-
+		/**
+		 * 
+		 * @param packet The datagram packet containing an alive message.
+		 * @return The Id of the peer who sent the alive message.
+		 */
 		private long parseMessage(DatagramPacket packet) {
 			byte[] bytes = packet.getData();
 			return ByteBuffer.wrap(bytes).getLong();
 		}
 		
+		/**
+		 * Stop this thread.
+		 */
 		public void stop() {
 			running = false;
 		}
 	}
 	
+	/**
+	 * 
+	 * Class used to broadcast alive messages over UDP.
+	 * Implements the runnable interface. Must be started
+	 * in its own thread. Broadcasts an alive messages every
+	 * ALIVE_INTERVAL ms.
+	 *
+	 */
 	private class AliveSender implements Runnable {
 		
 		private boolean running;
@@ -112,17 +162,16 @@ public class Radio {
 			}
 			running = true;
 			while(running) {
-				long id = Elevator.getLocalElevator().getId();
-				byte[] msg = Util.asBytes(id);
+				long myId = Elevator.getLocalElevator().getId();
+				byte[] aliveMessage = Util.asBytes(myId);
 				try {
-					socket.send(new DatagramPacket(msg, msg.length, group, receivePort));
+					socket.send(new DatagramPacket(aliveMessage, aliveMessage.length, group, receivePort));
 				} catch (IOException e) {
 					continue;
 				}
 				try {
 					Thread.sleep(ALIVE_INTERVAL);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					continue;
 				}
 			}
