@@ -155,8 +155,11 @@ public class Elevator {
 
 	private void updatePhysicalElevator() {
 		Driver driver = Driver.getInstance();
+		long[][] orders = Manager.getInstance().getOrders();
 		for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
 			driver.setButtonLamp(Call.COMMAND, floor, state.commands[floor]);
+			driver.setButtonLamp(Call.UP, floor, orders[Direction.UP.ordinal()][floor] == id);
+			driver.setButtonLamp(Call.DOWN, floor, orders[Direction.DOWN.ordinal()][floor] == id);
 		}
 		driver.setStopLamp(state.stopped);
 		driver.setDoorOpenLamp(state.doorsOpen);
