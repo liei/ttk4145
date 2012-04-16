@@ -17,7 +17,7 @@ public class RecsDriver extends Driver {
 			break;
 		case COMMAND:
 			Elevator elev = Elevator.getLocalElevator();
-			elev.addOrder(call,floor);
+			elev.addCommand(floor);
 			break;
 		}
 	}

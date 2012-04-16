@@ -116,7 +116,7 @@ public class Elevator {
 					}
 					
 					// TODO: reset orders in manager
-					Manager.getInstance().deleteOrder(state.dir,state.floor);
+					Manager.getInstance().orderDone(state.dir,state.floor);
 					state.commands[state.floor] = false;
 				}
 			}
