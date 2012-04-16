@@ -5,7 +5,6 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -17,6 +16,8 @@ import edu.ntnu.ttk4145.recs.OrderMessage;
 import edu.ntnu.ttk4145.recs.Peer;
 import edu.ntnu.ttk4145.recs.UpdateStateMessage;
 import edu.ntnu.ttk4145.recs.Util;
+import edu.ntnu.ttk4145.recs.Elevator.Direction;
+import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
 import edu.ntnu.ttk4145.recs.network.Radio;
 
@@ -25,10 +26,7 @@ public class Manager {
 	private final static String MULTICAST_GROUP = "224.0.2.1";
 	private final static int SEND_PORT = 7001;
 	private final static int RECEIVE_PORT = 7002;
-	private final long myId = Util.makeLocalId();
-	private Peer master;
 	
-	public HashMap<Long,Order> orders;
 	
 	private static Manager instance;
 	
@@ -39,7 +37,12 @@ public class Manager {
 		return instance;
 	}
 	
+	private final long myId = Util.makeLocalId();
+
+	public long[][] orders = new long[2][Driver.NUMBER_OF_FLOORS];
+	
 	SortedMap<Long,Peer> peers;
+	private Peer master;
 	
 	private Manager(){
 		peers = new TreeMap<Long,Peer>();
@@ -91,10 +94,7 @@ public class Manager {
 	 * @param order A order to service.
 	 */
 	private void addOrder(Order order) {
-		orders.put(order.getId(), order);
-		if(master.getId() == myId) {
-			dispatchOrder(order);
-		}
+		// TODO
 	}
 	
 	/**
@@ -102,7 +102,7 @@ public class Manager {
 	 * @param order Remove an order from the local instance of the global order queue.
 	 */
 	private void removeOrder(Order order) {
-		orders.remove(order.getId());
+		// TODO
 	}
 	
 	/**
@@ -135,11 +135,12 @@ public class Manager {
 	 * @param button The button that was pressed.
 	 * @param floor The floor where the button was pressed.
 	 */
-	public void registerCall(Call button, int floor) {
-		Order order = new Order(button, floor);
+	public void registerCall(Call call, int floor) {
+		orders[call.ordinal()][floor] = myId;
 		//Elevator.getLocalElevator().addOrder(order);
 		for (Peer peer : peers.values()) {
-			peer.sendMessage(new OrderMessage(order));
+			// TODO
+//			peer.sendMessage(new OrderMessage(order));
 		}
 	}
 	
@@ -291,6 +292,10 @@ public class Manager {
 					throw new RuntimeException("Unpossible!");
 			}	
 		}
+	}
+
+	public synchronized long[][] getOrders() {
+		return Util.copyOf(orders);
 	}
 
 	public void orderDone(Direction dir, int floor) {
