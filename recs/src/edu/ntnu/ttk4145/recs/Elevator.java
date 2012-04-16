@@ -107,7 +107,7 @@ public class Elevator {
 					state.dir = Direction.DOWN;
 				} 
 
-				long orderId = orders[state.dir.ordinal()][state.floor];
+				long orderId = state.dir != Direction.NONE ? orders[state.dir.ordinal()][state.floor] : 0;
 				
 				if(orderId == id || state.commands[state.floor]){
 					// Stop at this floor;
@@ -123,7 +123,7 @@ public class Elevator {
 					state.atFloor = false;
 				} else {
 					state.dir = Direction.NONE;
-				} 
+				}
 			}
 		}
 		
