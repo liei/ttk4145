@@ -137,12 +137,13 @@ public class Manager {
 	 */
 	public void registerCall(Call call, int floor) {
 		orders[call.ordinal()][floor] = myId;
+		System.out.printf("registerCall (%s,%d) = %d",call,floor,myId);
 		Elevator.getLocalElevator().updateElevatorState();
 		//Elevator.getLocalElevator().addOrder(order);
-		for (Peer peer : peers.values()) {
-			// TODO
-//			peer.sendMessage(new OrderMessage(order));
-		}
+//		for (Peer peer : peers.values()) {
+//			// TODO
+////			peer.sendMessage(new OrderMessage(order));
+//		}
 	}
 	
 	/**
