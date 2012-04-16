@@ -110,7 +110,7 @@ public class Elevator {
 
 				long orderId = state.dir != Direction.NONE ? orders[state.dir.ordinal()][state.floor] : 0;
 				
-				System.out.printf("read O(%s,%f) = %n",state.dir,state.floor,orderId);
+				System.out.printf("read O(%s,%d) = %n",state.dir,state.floor,orderId);
 				
 				if(orderId == id || state.commands[state.floor]){
 					// Stop at this floor;
