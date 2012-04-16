@@ -202,6 +202,12 @@ public abstract class Driver {
 	private boolean running;
 	
 	private boolean[][] previousValue = new boolean[SignalType.values().length][NUMBER_OF_FLOORS];
+	private long stopPressed;
+	private long stopButtonDelay = 2000; // default stop button delay is 2000 ms
+
+	public void setStopButtonDelay(int delay){
+		stopButtonDelay = Math.max(0,delay);
+	}
 	
 	public void startCallbacks(){
 		callback = new Thread(new Runnable(){
@@ -212,9 +218,9 @@ public abstract class Driver {
 					for(SignalType type : SignalType.values()){
 						for(int floor = 0; floor < SIGNAL_CHANNELS[type.ordinal()].length; floor++){
 							boolean value = io_read_bit(SIGNAL_CHANNELS[type.ordinal()][floor]) == 1;
-
+							
 							// If value has not changed, ignore.
-							if(value != previousValue[type.ordinal()][floor]){
+							if(value != previousValue[type.ordinal()][floor] || type == SignalType.STOP){
 								switch(type){
 								case CALL_UP:
 									if(value)
@@ -232,7 +238,14 @@ public abstract class Driver {
 									floorSensorTriggered(floor, value);
 									break;
 								case STOP:
-									stopButtonPressed(value);
+									if(value){
+										stopPressed = System.currentTimeMillis();
+									} else {
+										long now = System.currentTimeMillis();
+										if(now - stopPressed > stopButtonDelay){
+											stopButtonPressed();
+										}
+									}
 									break;
 								case OBSTRUCTION:
 									obstructionSensorTriggered(value);
@@ -264,7 +277,7 @@ public abstract class Driver {
 	
 	protected abstract void floorSensorTriggered(int floor, boolean arriving);
 	
-	protected abstract void stopButtonPressed(boolean pressed);
+	protected abstract void stopButtonPressed();
 	
 	protected abstract void obstructionSensorTriggered(boolean enabled);
 	

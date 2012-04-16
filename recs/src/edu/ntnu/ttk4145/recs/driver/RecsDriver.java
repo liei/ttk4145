@@ -29,22 +29,11 @@ public class RecsDriver extends Driver {
 		elev.setFloor(floor,arriving);
 	}
 
-	private static final long STOP_ACTIVATION_DELAY = 2000; // Times it takes to activate the stop button (ms)
-	
-	private long stopPressed;
-	
 	@Override
-	protected void stopButtonPressed(boolean pressed) {
-		System.out.printf("RecsDriver.stopButtonPressed(%b)%n",pressed);
+	protected void stopButtonPressed() {
+		System.out.println("RecsDriver.stopButtonPressed()");
 		Elevator elev = Elevator.getLocalElevator();
-		if(pressed){
-			stopPressed = System.currentTimeMillis();
-		} else {
-			long now = System.currentTimeMillis();
-			if(now - stopPressed > STOP_ACTIVATION_DELAY){
-				elev.setStopped(!elev.getState().isStopped());
-			}
-		}
+		elev.setStopped(!elev.getState().isStopped());
 	}
 
 	@Override
