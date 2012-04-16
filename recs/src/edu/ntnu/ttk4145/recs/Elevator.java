@@ -107,24 +107,24 @@ public class Elevator {
 
 				if(callsOver || callsUnder){
 					state.atFloor = false;
+					long orderId = orders[state.dir.ordinal()][state.floor];
+					
+					if(orderId == id || state.commands[state.floor]){
+						// Stop at this floor;
+						letPeopleOnOff();
+						
+						if(orderId != NO_ORDER){
+							Manager.getInstance().orderDone(orderId);
+						}
+						
+						// TODO: reset orders in manager
+						Manager.getInstance().orderDone(state.dir,state.floor);
+						state.commands[state.floor] = false;
+					}
 				} else {
 					state.dir = Direction.NONE;
 				} 
 				
-				long orderId = orders[state.dir.ordinal()][state.floor];
-				
-				if(orderId == id || state.commands[state.floor]){
-					// Stop at this floor;
-					letPeopleOnOff();
-					
-					if(orderId != NO_ORDER){
-						Manager.getInstance().orderDone(orderId);
-					}
-					
-					// TODO: reset orders in manager
-					Manager.getInstance().orderDone(state.dir,state.floor);
-					state.commands[state.floor] = false;
-				}
 				
 			}
 		}
