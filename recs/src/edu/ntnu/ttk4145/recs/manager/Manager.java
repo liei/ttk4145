@@ -64,7 +64,7 @@ public class Manager {
 	 * @param timeOfLastAlive The time the alive message was received.
 	 * @param address The address of the peer.
 	 */
-	public synchronized void handleAliveMessage(long peerId, long timeOfLastAlive, InetAddress address) {
+	public void handleAliveMessage(long peerId, long timeOfLastAlive, InetAddress address) {
 		if(peers.containsKey(peerId)) {
 			peers.get(peerId).updateAliveTime(timeOfLastAlive);
 		}
@@ -82,7 +82,7 @@ public class Manager {
 	 * @param peerId The Id of the peer.
 	 * @param newState The peer's new state.
 	 */
-	public synchronized void updatePeerState(long peerId, Elevator.State newState) {
+	public void updatePeerState(long peerId, Elevator.State newState) {
 		peers.get(peerId).updateState(newState);
 	}
 	
@@ -90,7 +90,7 @@ public class Manager {
 	 * Add order to the global order queue.
 	 * @param order A order to service.
 	 */
-	private synchronized void addOrder(Order order) {
+	private void addOrder(Order order) {
 		orders.put(order.getId(), order);
 		if(master.getId() == myId) {
 			dispatchOrder(order);
@@ -101,7 +101,7 @@ public class Manager {
 	 * 
 	 * @param order Remove an order from the local instance of the global order queue.
 	 */
-	private synchronized void removeOrder(Order order) {
+	private void removeOrder(Order order) {
 		orders.remove(order.getId());
 	}
 	
@@ -135,7 +135,7 @@ public class Manager {
 	 * @param button The button that was pressed.
 	 * @param floor The floor where the button was pressed.
 	 */
-	public synchronized void registerCall(Call button, int floor) {
+	public void registerCall(Call button, int floor) {
 		Order order = new Order(button, floor);
 		//Elevator.getLocalElevator().addOrder(order);
 		for (Peer peer : peers.values()) {
@@ -147,7 +147,7 @@ public class Manager {
 	 * Notify the peers about a change in elevator state.
 	 * @param state The new elevator state.
 	 */
-	public synchronized void sendUpdateStateMessages(Elevator.State state){
+	public void sendUpdateStateMessages(Elevator.State state){
 		UpdateStateMessage updateStateMessage = new UpdateStateMessage(myId, state);
 		for(Peer peer : peers.values()){
 			 peer.sendMessage(updateStateMessage);
@@ -158,7 +158,7 @@ public class Manager {
 	 * Removes a peer from the list of all active peers.
 	 * @param peer The peer who has timed out.
 	 */
-	public synchronized void removePeer(Peer peer) {
+	public void removePeer(Peer peer) {
 		peers.remove(peer);
 		if(peer == master) {
 			setMaster();
@@ -184,7 +184,7 @@ public class Manager {
 	 * Finds the peer best suited to perform Order and dispatches the order.
 	 * @param order An order to perform
 	 */
-	private synchronized void dispatchOrder(Order order) {
+	private void dispatchOrder(Order order) {
 		Peer bestSuited = null;
 		double maxOrderRating = 0;
 		for(Peer peer : peers.values()) {

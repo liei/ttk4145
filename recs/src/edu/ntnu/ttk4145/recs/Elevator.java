@@ -36,9 +36,12 @@ public class Elevator {
 	public void init(){
 		Driver driver = Driver.makeInstance(RecsDriver.class);
 		while(driver.getFloorSensorState() != 0){
-			driver.setSpeed(Direction.DOWN.speed);
+			driver.setSpeed(-1000);
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {}
 		}
-		driver.setSpeed(Direction.NONE.speed);
+		driver.setSpeed(0);
 		driver.startCallbacks();
 	}
 	
@@ -58,11 +61,6 @@ public class Elevator {
 	public void setFloor(int floor, boolean arriving) {
 		if(arriving){
 			state.floor = floor;
-			if(state.floor == 0){
-				state.dir = Direction.UP;
-			} else if (state.floor == Driver.NUMBER_OF_FLOORS - 1){
-				state.dir = Direction.DOWN;
-			}
 		}
 		state.atFloor = arriving;
 		updateElevatorState();
@@ -73,13 +71,8 @@ public class Elevator {
 		updateElevatorState();
 	}
 	
-	public synchronized void addOrder(Order order){
-		state.orders[order.call.ordinal()][order.floor] = order.id;
-		updateElevatorState();
-	}
-
-	public synchronized void addOrder(Call button, int floor) {
-		state.orders[button.ordinal()][floor] = 1;
+	public synchronized void addCommand(int floor) {
+		state.commands[floor] = true;
 		updateElevatorState();
 	}
 	
@@ -88,10 +81,33 @@ public class Elevator {
 		if(state.stopped || state.obstructed || state.doorsOpen){
 			;
 		} else {
+			long[][] orders = Manager.getInstance().getOrders();
+			boolean callsOver  = orders[Direction.UP.ordinal()][state.floor] == id;
+			boolean callsUnder = orders[Direction.DOWN.ordinal()][state.floor] == id;
+			for(int i = 0; i < orders.length; i++){
+				for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
+					if(orders[i][floor] == id || state.commands[floor]){
+						if(floor > state.floor){
+							callsOver = true;
+						} else if (floor < state.floor){
+							callsUnder = true;
+						} 
+					}
+				}
+			}
+			
+			if(callsOver && !callsUnder){
+				state.dir = Direction.UP;
+			} else if(callsUnder && !callsOver){
+				state.dir = Direction.DOWN;
+			}
+			
 			if(state.atFloor) {
 				// Stopped at a floor
-				long orderId = state.orders[state.dir.ordinal()][state.floor];
-				if(orderId != NO_ORDER || state.orders[Call.COMMAND.ordinal()][state.floor] != NO_ORDER){
+				
+				long orderId = orders[state.dir.ordinal()][state.floor];
+				
+				if(orderId == id || state.commands[state.floor]){
 					// Stop at this floor;
 					letPeopleOnOff();
 					
@@ -99,32 +115,19 @@ public class Elevator {
 						Manager.getInstance().orderDone(orderId);
 					}
 					
-					System.out.printf("orders[%d][%d] = %d%n",state.dir.ordinal(),state.floor,state.orders[state.dir.ordinal()][state.floor]);
-					state.orders[state.dir.ordinal()][state.floor] = NO_ORDER;
-					System.out.printf("orders[%d][%d] = %d%n",Call.COMMAND.ordinal(),state.floor,state.orders[Call.COMMAND.ordinal()][state.floor]);
-					state.orders[Call.COMMAND.ordinal()][state.floor] = NO_ORDER;
+					// TODO: reset orders in manager
+					Manager.getInstance().deleteOrder(state.dir,state.floor);
+					state.commands[state.floor] = false;
 				}
 			}
 			
-			int callsOver = 0;
-			int callsUnder = 0;
-			for(Call call : Call.values()){
-				for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
-					if(state.orders[call.ordinal()][floor] != NO_ORDER){
-						if(floor > state.floor){
-							callsOver++;
-						} else if (floor < state.floor){
-							callsUnder++;
-						}
-					}
-				}
-			}
-			if(callsOver == 0 && callsUnder == 0){
+
+			if(!callsOver && !callsUnder){
 				state.dir = Direction.NONE;
-			} else if (callsOver  > 0 && callsUnder == 0){
+			} else if (callsOver && callsUnder){
 				state.dir = Direction.UP;
 				state.atFloor = false;
-			} else if (callsUnder > 0 && callsOver  == 0){
+			} else if (callsUnder && !callsOver){
 				state.dir = Direction.DOWN;
 				state.atFloor = false;
 			} else {
@@ -158,10 +161,8 @@ public class Elevator {
 
 	private void updatePhysicalElevator() {
 		Driver driver = Driver.getInstance();
-		for(Call button : Call.values()){
-			for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
-				driver.setButtonLamp(button, floor, state.orders[button.ordinal()][floor] != NO_ORDER);
-			}
+		for(int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++){
+			driver.setButtonLamp(Call.COMMAND, floor, state.commands[floor]);
 		}
 		driver.setStopLamp(state.stopped);
 		driver.setDoorOpenLamp(state.doorsOpen);
@@ -189,7 +190,7 @@ public class Elevator {
 		
 		private int floor = -1;
 		
-		private long[][] orders = new long[Call.values().length][Driver.NUMBER_OF_FLOORS];
+		private boolean[] commands = new boolean[Driver.NUMBER_OF_FLOORS];
 
 		private boolean atFloor = false;
 		private boolean stopped = false;
@@ -204,8 +205,8 @@ public class Elevator {
 			return floor;
 		}
 		
-		public long[][] getOrders(){
-			return orders;
+		public boolean[] getCommands(){
+			return commands;
 		}
 		
 		public boolean isAtFloor(){
@@ -233,9 +234,7 @@ public class Elevator {
 			
 			for(int floor = Driver.NUMBER_OF_FLOORS - 1; floor >= 0; floor--){
 				pw.printf("%d: ",floor+1);
-				for(Call call : Call.values()){
-					pw.printf("%s: %d, ", call,orders[call.ordinal()][floor]);
-				}
+				pw.printf("%s: %d, ",commands[floor] ? '-' : ' ');
 				pw.println();
 			}
 			return sw.toString();
