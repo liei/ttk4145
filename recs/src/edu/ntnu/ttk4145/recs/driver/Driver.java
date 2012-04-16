@@ -215,12 +215,15 @@ public abstract class Driver {
 			public void run() {
 				running = true;
 				while(running){
+					if(stopPressed > 0 && (System.currentTimeMillis() - stopPressed) > stopButtonDelay){
+						stopButtonPressed();
+					}
 					for(SignalType type : SignalType.values()){
 						for(int floor = 0; floor < SIGNAL_CHANNELS[type.ordinal()].length; floor++){
 							boolean value = io_read_bit(SIGNAL_CHANNELS[type.ordinal()][floor]) == 1;
 							
 							// If value has not changed, ignore.
-							if(value != previousValue[type.ordinal()][floor] || type == SignalType.STOP){
+							if(value != previousValue[type.ordinal()][floor]){
 								switch(type){
 								case CALL_UP:
 									if(value)
@@ -240,11 +243,7 @@ public abstract class Driver {
 								case STOP:
 									if(value){
 										stopPressed = System.currentTimeMillis();
-									} else if (stopPressed != 0){
-										long now = System.currentTimeMillis();
-										if(now - stopPressed > stopButtonDelay){
-											stopButtonPressed();
-										}
+									} else {
 										stopPressed = 0;
 									}
 									break;
