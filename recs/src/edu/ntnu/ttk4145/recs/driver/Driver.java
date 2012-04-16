@@ -217,13 +217,16 @@ public abstract class Driver {
 							if(value != previousValue[type.ordinal()][floor]){
 								switch(type){
 								case CALL_UP:
-									buttonPressed(Call.UP, floor);
+									if(value)
+										buttonPressed(Call.UP, floor);
 									break;
 								case CALL_DOWN:
-									buttonPressed(Call.DOWN,floor);
+									if(value)
+										buttonPressed(Call.DOWN,floor);
 									break;
 								case CALL_COMMAND:
-									buttonPressed(Call.COMMAND,floor);
+									if(value)
+										buttonPressed(Call.COMMAND,floor);
 									break;
 								case SENSOR:
 									floorSensorTriggered(floor, value);
