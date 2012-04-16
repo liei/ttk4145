@@ -73,7 +73,7 @@ public class Radio {
 				try {
 					socket.receive(packet);
 					long id = parseMessage(packet);
-					Manager.getInstance().updatePeer(id, System.currentTimeMillis(), packet.getAddress());
+					Manager.getInstance().handleAliveMessage(id, System.currentTimeMillis(), packet.getAddress());
 				} catch (IOException e) {
 					continue;
 				}

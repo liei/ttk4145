@@ -44,7 +44,11 @@ public class Manager {
 	private Manager(){
 		peers = new TreeMap<Long,Peer>();
 	}
-
+	
+	/**
+	 * Starts the manager instance. The manager will sent and listen to alive messages.
+	 * Send and receive orders to and from the local elevator.
+	 */
 	public void startManager(){
 		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
 		radio.start();
@@ -53,23 +57,39 @@ public class Manager {
 		discoverMaster();		
 	}
 	
-	public void updatePeer(long id, long timeOfLastAlive, InetAddress address) {
-		if(peers.containsKey(id)) {
-			peers.get(id).updateAliveTime(timeOfLastAlive);
+	/**
+	 * Handle a newly received alive message.
+	 * 
+	 * @param peerId The ID of the peer who sent the alive message.
+	 * @param timeOfLastAlive The time the alive message was received.
+	 * @param address The address of the peer.
+	 */
+	public void handleAliveMessage(long peerId, long timeOfLastAlive, InetAddress address) {
+		if(peers.containsKey(peerId)) {
+			peers.get(peerId).updateAliveTime(timeOfLastAlive);
 		}
 		else {
-			Peer newPeer = new Peer(address, id);
-			peers.put(id, newPeer);
+			Peer newPeer = new Peer(address, peerId);
+			peers.put(peerId, newPeer);
 			if(newPeer.getId() < master.getId()) {
 				master = newPeer;
 			}
 		}
 	}
 	
-	public void updatePeer(long peerId, Elevator.State newState) {
+	/**
+	 * Update the local representation peer's state.
+	 * @param peerId The Id of the peer.
+	 * @param newState The peer's new state.
+	 */
+	public void updatePeerState(long peerId, Elevator.State newState) {
 		peers.get(peerId).updateState(newState);
 	}
 	
+	/**
+	 * Add order to the global order queue.
+	 * @param order A order to service.
+	 */
 	private void addOrder(Order order) {
 		orders.put(order.getId(), order);
 		if(master.getId() == myId) {
@@ -77,38 +97,67 @@ public class Manager {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param order Remove an order from the local instance of the global order queue.
+	 */
 	private void removeOrder(Order order) {
 		orders.remove(order.getId());
 	}
 	
-
+	/**
+	 * 
+	 * @return The multicast group to listen to for alive messages over UDP.
+	 */
 	public static String getMulticastgroup() {
 		return MULTICAST_GROUP;
 	}
 
+	/**
+	 * 
+	 * @return The port used to send TCP and UDP messages.
+	 */
 	public static int getSendport() {
 		return SEND_PORT;
 	}
 	
+	/**
+	 * 
+	 * @return The port used to receive TCP and UDP messages.
+	 */
 	public static int getReciveport() {
 		return RECEIVE_PORT;
 	}
 
+	/**
+	 * Register a local call for elevator. Notice every peer that a call has been made.
+	 * 
+	 * @param button The button that was pressed.
+	 * @param floor The floor where the button was pressed.
+	 */
 	public void registerCall(Call button, int floor) {
 		Order order = new Order(button, floor);
 		//Elevator.getLocalElevator().addOrder(order);
 		for (Peer peer : peers.values()) {
-			peer.sendMessage(new DoOrderMessage(order));
+			peer.sendMessage(new OrderMessage(order));
 		}
 	}
 	
-	public void updateState(Elevator.State state){
+	/**
+	 * Notify the peers about a change in elevator state.
+	 * @param state The new elevator state.
+	 */
+	public void sendUpdateStateMessages(Elevator.State state){
 		UpdateStateMessage updateStateMessage = new UpdateStateMessage(myId, state);
 		for(Peer peer : peers.values()){
 			 peer.sendMessage(updateStateMessage);
 		}
 	}
 	
+	/**
+	 * Removes a peer from the list of all active peers.
+	 * @param peer The peer who has timed out.
+	 */
 	public void removePeer(Peer peer) {
 		peers.remove(peer);
 		if(peer == master) {
@@ -145,7 +194,10 @@ public class Manager {
 		bestSuited.sendMessage(new DoOrderMessage(order));	
 		}
 	}
-
+	
+	/**
+	 * Listens to alive messages to register peers and finds out who's master.
+	 */
 	private void discoverMaster() {
 		try {
 			//Wait to receive a few alive messages before we search list of peers for a master.
@@ -164,6 +216,12 @@ public class Manager {
 		System.out.printf("Order done: %d%n",orderId);
 	}
 	
+	/**
+	 * 
+	 * A class for listening to messages from the other peers on the network.
+	 * Spawns new threads to handle incoming messages.
+	 *
+	 */
 	private class MessageListener {
 		
 		private ServerSocket server = null;
@@ -189,6 +247,13 @@ public class Manager {
 		}
 	}
 	
+	/**
+	 * 
+	 * A class to handle the messages received from other peers.
+	 * The message types handled are of types ORDER, DO_ORDER,
+	 * DONE and STATE.
+	 *
+	 */
 	private class MessageHandler implements Runnable{
 		private Socket socket;
 		
@@ -229,9 +294,5 @@ public class Manager {
 					throw new RuntimeException("Unpossible!");
 			}	
 		}
-	}
-	
-	public static void main(String[] args) {
-		Manager manager = getInstance();
 	}
 }

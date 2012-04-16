@@ -136,7 +136,7 @@ public class Elevator {
 		System.out.println(state);
 		
 		updatePhysicalElevator();
-		Manager.getInstance().updateState(state);
+		Manager.getInstance().sendUpdateStateMessages(state);
 	}
 	
 	private void letPeopleOnOff() {
