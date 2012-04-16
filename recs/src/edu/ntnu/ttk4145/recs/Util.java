@@ -5,6 +5,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Random;
 
@@ -53,6 +54,14 @@ public class Util {
 		System.arraycopy(getLocalIp(), 0, bytes,0, 4);
 		System.arraycopy(asBytes(RNG.nextInt()), 0, bytes, 4, 4);
 		return longFromBytes(bytes);
+	}
+
+	public static long[][] copyOf(long[][] m) {
+		long[][] c = new long[m.length][];
+		for(int i = 0; i < c.length; i++){
+			c[i] = Arrays.copyOf(m[i], m[i].length);
+		}
+		return c;
 	}
 
 

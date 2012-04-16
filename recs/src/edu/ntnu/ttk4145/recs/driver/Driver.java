@@ -164,13 +164,13 @@ public abstract class Driver {
 		}
 	}
 	
-	public void setButtonLamp(Call button, int floor, boolean on) {
+	public void setButtonLamp(Call call, int floor, boolean on) {
 		legalFloor(floor);
 		
 		if(on){
-			io_set_bit(LAMP_CHANNELS[button.ordinal()][floor]);
+			io_set_bit(LAMP_CHANNELS[call.ordinal()][floor]);
 		} else {
-			io_clear_bit(LAMP_CHANNELS[button.ordinal()][floor]);
+			io_clear_bit(LAMP_CHANNELS[call.ordinal()][floor]);
 		}
 	}
 	
