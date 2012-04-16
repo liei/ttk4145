@@ -301,4 +301,8 @@ public class Manager {
 	public void orderDone(Direction dir, int floor) {
 		orders[dir.ordinal()][floor] = Order.NO_ORDER;
 	}
+
+	public long getId() {
+		return myId;
+	}
 }

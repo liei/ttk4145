@@ -226,6 +226,12 @@ public class Elevator {
 		}
 		
 		public String toString(){
+			
+			
+			Manager manager = Manager.getInstance();
+			long id = manager.getId();
+			long[][] orders = manager.getOrders();
+			
 			StringWriter sw = new StringWriter();
 			PrintWriter  pw = new PrintWriter(sw);
 			
@@ -234,7 +240,9 @@ public class Elevator {
 			
 			for(int floor = Driver.NUMBER_OF_FLOORS - 1; floor >= 0; floor--){
 				pw.printf("%d: ",floor+1);
-				pw.printf("%s: %d, ",commands[floor] ? '-' : ' ');
+				pw.printf("%c ",orders[Direction.UP.ordinal()][floor] == id ? '↑' : ' ');
+				pw.printf("%c ",orders[Direction.DOWN.ordinal()][floor] == id ? '↓' : ' ');
+				pw.printf("%s: %d, ",commands[floor] ? '■' : ' ');
 				pw.println();
 			}
 			return sw.toString();
