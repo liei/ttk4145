@@ -202,7 +202,7 @@ public abstract class Driver {
 	private boolean running;
 	
 	private boolean[][] previousValue = new boolean[SignalType.values().length][NUMBER_OF_FLOORS];
-	private long stopPressed;
+	private long stopPressed = 0;
 	private long stopButtonDelay = 2000; // default stop button delay is 2000 ms
 
 	public void setStopButtonDelay(int delay){
@@ -220,7 +220,7 @@ public abstract class Driver {
 							boolean value = io_read_bit(SIGNAL_CHANNELS[type.ordinal()][floor]) == 1;
 							
 							// If value has not changed, ignore.
-							if(value != previousValue[type.ordinal()][floor] || type == SignalType.STOP){
+							if(value != previousValue[type.ordinal()][floor] || stopPressed != 0){
 								switch(type){
 								case CALL_UP:
 									if(value)
@@ -245,6 +245,7 @@ public abstract class Driver {
 										if(now - stopPressed > stopButtonDelay){
 											stopButtonPressed();
 										}
+										stopPressed = 0;
 									}
 									break;
 								case OBSTRUCTION:
