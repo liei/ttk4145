@@ -18,7 +18,7 @@ public class Elevator {
 	
 	public static Elevator getLocalElevator(){
 		if(localInstance == null){
-			localInstance = new Elevator(Util.makeLocalId());
+			localInstance = new Elevator(Manager.getInstance().getId());
 		}
 		return localInstance;
 	}
