@@ -217,6 +217,7 @@ public abstract class Driver {
 				while(running){
 					if(stopPressed > 0 && (System.currentTimeMillis() - stopPressed) > stopButtonDelay){
 						stopButtonPressed();
+						stopPressed = 0;
 					}
 					for(SignalType type : SignalType.values()){
 						for(int floor = 0; floor < SIGNAL_CHANNELS[type.ordinal()].length; floor++){
