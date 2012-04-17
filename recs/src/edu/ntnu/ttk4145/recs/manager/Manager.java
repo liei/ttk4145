@@ -299,7 +299,7 @@ public class Manager {
 					break;
 				case DONE:
 					OrderDoneMessage doneMessage = (OrderDoneMessage) message;
-					deleteOrder(doneMessage.getDir(),doneMessage.getFloor(),doneMessage.getElevId());
+					deleteOrder(doneMessage.getElevId(),doneMessage.getOrder());
 					break;
 				default:
 					throw new RuntimeException("Unpossible!");
@@ -307,7 +307,9 @@ public class Manager {
 		}
 	}
 	
-	private synchronized void deleteOrder(Direction dir, int floor, long elevId) {
+	private synchronized void deleteOrder(long elevId, Order order){
+		Direction dir = order.getDir();
+		int floor = order.floor;
 		if(orders[dir.ordinal()][floor] == elevId){
 			orders[dir.ordinal()][floor] = NO_ORDER;
 		}
@@ -330,6 +332,6 @@ public class Manager {
 	}
 
 	public synchronized void orderDone(Direction dir, int floor) {
-		master.sendMessage(new OrderDoneMessage(dir,floor,myId));
+		master.sendMessage(new OrderDoneMessage(myId,new Order(dir,floor)));
 	}
 }

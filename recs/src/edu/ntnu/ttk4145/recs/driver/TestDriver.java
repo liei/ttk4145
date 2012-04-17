@@ -10,10 +10,11 @@ public class TestDriver extends Driver{
 		System.out.printf("TestDriver.buttonPressed(%s,%d)%n",button,floor);
 	}
 	
+	private boolean stop = false;
+	
 	@Override
-	protected void stopButtonPressed(boolean stopButtonPressed) {
-		//TODO: Use this parameter for something useful.
-		setStopLamp(true);
+	protected void stopButtonPressed() {
+		setStopLamp(stop = !stop);
 		System.out.println("Stop button pushed");
 	}
 	
@@ -35,15 +36,13 @@ public class TestDriver extends Driver{
 		System.out.println("Obstruction switch flipped");
 	}
 	
-	static int speed = 2000;
-	
 	public static void main(String[] args) {
 		Driver driver = Driver.makeInstance(TestDriver.class);
 		driver.resetAllLamps();
-		driver.setSpeed(speed);
+		driver.setSpeed(1000);
 		
 		driver.startCallbacks();
-		System.out.println("Started");
+		System.out.println("Started (enter to quit)");
 		try {
 			System.in.read();
 		} catch (IOException e) {}
