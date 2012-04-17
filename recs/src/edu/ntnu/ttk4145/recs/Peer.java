@@ -15,30 +15,35 @@ public class Peer {
 	private InetAddress ip;
 	private long timeOfLastAlive;
 	private long id;
-	private Socket socket = null;
-	ObjectOutputStream messageStream = null;
 	private Elevator.State state;
 	
 	public Peer(InetAddress address, long id) {
 		ip = address;
 		this.id = id;
 		try {
-			socket = new Socket(ip, Manager.getReciveport());
-			messageStream = new ObjectOutputStream(socket.getOutputStream());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public void sendMessage(Message msg){
+	public void sendMessage(final Message msg){
 		if(hasTimedOut()) {
 			Manager.getInstance().removePeer(this);
 		}
-		try {
-			messageStream.writeObject(msg);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		
+		new Thread(){
+			public void run(){
+				try {
+					Socket socket = new Socket(ip, Manager.getReciveport());
+					ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+					oos.writeObject(msg);
+					oos.close();
+					socket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}.start();
 	}
 	
 	public void updateAliveTime(long timeOfLastAlive) {
