@@ -63,10 +63,10 @@ public class Manager {
 	 * Send and receive orders to and from the local elevator.
 	 */
 	public void startManager(){
-		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
 		MessageListener peerListener = new MessageListener();
 		peerListener.start();
 		
+		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
 		radio.start();
 	}
 	
@@ -127,7 +127,7 @@ public class Manager {
 	 * @param floor The floor where the button was pressed.
 	 */
 	public void registerCall(Call call, int floor) {
-		System.out.printf("registerCall (%s,%d) = %d",call,floor,myId);
+		System.out.printf("registerCall (%s,%d)%n",call,floor);
 		master.sendMessage(new NewOrderMessage(new Order(Direction.values()[call.ordinal()],floor)));
 	}
 	
@@ -255,19 +255,6 @@ public class Manager {
 		return (orderBacklog + elevatorDirOppositeOrder) * numFloorScalingFactor;
 	}
 	
-	
-	
-	/**
-	 * Listens to alive messages to register peers and finds out who's master.
-	 */
-	private void discoverMaster() {
-		try {
-			//Wait to receive a few alive messages before we search list of peers for a master.
-			Thread.sleep(Radio.getAliveInterval());
-		} catch (InterruptedException e) {}
-		setMaster();
-	}
-	
 	private void setMaster() {
 		master = peers.get(peers.firstKey());
 	}
@@ -331,6 +318,7 @@ public class Manager {
 			if(message == null){
 				return;
 			}
+			System.out.printf("Received msg: %s%n",message.getType());
 			switch(message.getType()) {
 			case UPDATE_ORDERS: 
 				UpdateOrdersMessage ordersMessage = (UpdateOrdersMessage) message; 
