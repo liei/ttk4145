@@ -280,6 +280,7 @@ public class Manager {
 		
 		@Override
 		public void run() {
+			running = true;
 			while(running) {
 				Socket sock = null;
 				try {
