@@ -283,10 +283,12 @@ public class Manager {
 			while(running) {
 				Socket sock = null;
 				try {
+					System.out.println("waiting");
 					sock = server.accept();
 				} catch (IOException ioe) {
 					ioe.printStackTrace();
 				}
+				System.out.println("Got message");
 				final Socket socket = sock;
 				new Thread(){
 					public void run() {
@@ -344,8 +346,6 @@ public class Manager {
 			}	
 		}
 	}
-	
-
 	
 	private boolean isMaster() {
 		return myId == master.getId();
