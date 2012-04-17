@@ -267,6 +267,8 @@ public class Manager {
 			try {
 				ois = new ObjectInputStream(socket.getInputStream());
 				message = (Message)ois.readObject();
+				ois.close();
+				socket.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
@@ -274,6 +276,7 @@ public class Manager {
 			}
 			handleMessage(message);
 		}
+		
 		private void handleMessage(Message message) {
 			switch(message.getType()) {
 				case ORDER: 
