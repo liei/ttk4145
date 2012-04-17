@@ -1,6 +1,7 @@
 package edu.ntnu.ttk4145.recs;
 
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.io.StringWriter;
 
 import edu.ntnu.ttk4145.recs.driver.Driver;
@@ -181,8 +182,10 @@ public class Elevator {
 		}
 	}
 	
-	public static class State{
+	public static class State implements Serializable{
 		
+		private static final long serialVersionUID = -951119220083308575L;
+
 		private Direction dir = Direction.DOWN;
 		
 		private int floor = -1;
