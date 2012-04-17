@@ -39,7 +39,10 @@ public class Manager {
 	}
 	
 	private final long myId;
-
+	
+	// orders[Direction.UP.ordinal()][4] == peer.id means there's an order for the elevator to move to
+	// floor 5 to pick up someone who wants to go up.   (..ordinal() = 0)
+	// orders[1][7] == peer.id means someone on floor 8 wants to go down and peer has to pick them up.
 	public long[][] orders = new long[2][Driver.NUMBER_OF_FLOORS];
 	
 	SortedMap<Long,Peer> peers;
@@ -192,11 +195,16 @@ public class Manager {
 		updatePeerOrders();
 	}
 	
+	/**
+	 * Finds the beer best suited to service an order.
+	 * @param order The order to service.
+	 * @return The peer best suited to carry out Order.
+	 */
 	private Peer findBestPeerForOrder(Order order){
 		Peer bestPeer = null;
 		double best = 1;
 		for(Peer peer : peers.values()) {
-			double value = evaluateStateForOrder(peer.getState(), order);
+			double value = calculateOrderMatch(peer, order);
 			if(value < best) {
 				best = value; 
 				bestPeer = peer;
@@ -205,8 +213,54 @@ public class Manager {
 		return bestPeer;
 	}
 	
-	private double evaluateStateForOrder(Elevator.State state,Order order){
-		return Math.random();
+	/**
+	 * Used to evaluate how good a match this order is with this peer. 
+	 * @param peer The peer to evaluate.
+	 * @param order The order to be serviced.
+	 * @return A double expressing how good a match this order is for the given peer.
+	 * Where 0 indicates that this peer can't possibly service this order.
+	 */
+	private double calculateOrderMatch(Peer peer, Order order){
+		Elevator.State state = peer.getState();
+		
+		if(state.isObstructed() || state.isStopped()) {
+			return 0.0;
+		}
+		
+		int orderBacklog = 0;
+		
+		for (int direction = 0; direction < 2; direction++) {
+			for (int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++) {
+				if(orders[direction][floor] == peer.getId()) {
+					orderBacklog++;
+				}
+			}
+		}
+		
+		for (boolean internalCommand : state.getCommands()) {
+			if(internalCommand) {
+				orderBacklog++;
+			}
+		}
+		if(orderBacklog == 0) {
+			return 1.0;
+		}
+		
+		double elevatorDirOppositeOrder = 0;
+		if(state.getFloor() < order.getFloor() && state.getDirection() != Elevator.Direction.UP) {
+			elevatorDirOppositeOrder = 1d;
+		}
+		else if(state.getFloor() > order.getFloor() && state.getDirection() != Elevator.Direction.DOWN) {
+			elevatorDirOppositeOrder = 1d;
+		}
+		
+		if(elevatorDirOppositeOrder == 1.0) {
+			return 1.0;
+		}
+		
+		double numFloorScalingFactor = 1 / Driver.NUMBER_OF_FLOORS;
+		
+		return (orderBacklog + elevatorDirOppositeOrder) * numFloorScalingFactor;
 	}
 	
 	
