@@ -26,9 +26,10 @@ public class Peer {
 		}
 	}
 	
-	public void sendMessage(final Message msg){
+	public boolean sendMessage(final Message msg){
 		if(hasTimedOut()) {
 			Manager.getInstance().removePeer(this);
+			return false;
 		}
 		
 		new Thread(){
@@ -44,6 +45,7 @@ public class Peer {
 				}
 			}
 		}.start();
+		return true;
 	}
 	
 	public void updateAliveTime(long timeOfLastAlive) {
@@ -74,16 +76,4 @@ public class Peer {
 	public Elevator.State getState() {
 		return state;
 	}
-	
-	/**
-	 * 
-	 * @param order The order to evaluate
-	 * @return Double in rage [0,1] indicating how easy it would be for this peer
-	 * to perform the order. 
-	 */
-	public double getOrderRating(Order order) {
-		// TODO Auto-generated method stub
-		return 1;
-	}
-	
 }

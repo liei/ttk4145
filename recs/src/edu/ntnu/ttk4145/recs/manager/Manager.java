@@ -166,24 +166,50 @@ public class Manager {
 	 * @param peer Dead peer.
 	 */
 	private void redistributeOrders(Peer peer) {
-		
+		for(int dir = 0; dir < orders.length; dir++){
+			for(int floor = 0; floor < orders[dir].length; floor++){
+				if(orders[dir][floor] == peer.getId()){
+					Order order = new Order(Direction.values()[dir],floor);
+					Peer best = findBestPeerForOrder(order);
+					orders[order.getDir().ordinal()][order.getFloor()] = best.getId();
+				}
+			}
+		}
+		updatePeerOrders();
 	}
+	
+	
+	
 	
 	/**
 	 * 
-	 * Finds the peer best suited to perform Order and dispatches the order.
+	 * Finds the peer best suited to perform the Order and dispatches the order.
 	 * @param order An order to perform
 	 */
-	private void dispatchOrder(Order order) {
-		Peer bestSuited = null;
-		double maxOrderRating = 0;
+	private void dispatchOrder(Order order){
+		Peer best = findBestPeerForOrder(order);
+		orders[order.getDir().ordinal()][order.getFloor()] = best.getId();
+		updatePeerOrders();
+	}
+	
+	private Peer findBestPeerForOrder(Order order){
+		Peer bestPeer = null;
+		double best = 1;
 		for(Peer peer : peers.values()) {
-			if(maxOrderRating < peer.getOrderRating(order)) {
-				bestSuited = peer;
+			double value = evaluateStateForOrder(peer.getState(), order);
+			if(value < best) {
+				best = value; 
+				bestPeer = peer;
 			}
 		}
-		bestSuited.sendMessage(new UpdateOrdersMessage(orders));	
+		return bestPeer;
 	}
+	
+	private double evaluateStateForOrder(Elevator.State state,Order order){
+		return Math.random();
+	}
+	
+	
 	
 	/**
 	 * Listens to alive messages to register peers and finds out who's master.
@@ -285,6 +311,10 @@ public class Manager {
 		if(orders[dir.ordinal()][floor] == elevId){
 			orders[dir.ordinal()][floor] = NO_ORDER;
 		}
+		updatePeerOrders();
+	}
+
+	private synchronized void updatePeerOrders() {
 		long[][] ordersCopy = Util.copyOf(orders);
 		for(Peer peer : peers.values()){
 			peer.sendMessage(new UpdateOrdersMessage(ordersCopy));

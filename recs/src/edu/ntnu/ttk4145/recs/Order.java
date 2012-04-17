@@ -1,33 +1,19 @@
 package edu.ntnu.ttk4145.recs;
 
-import edu.ntnu.ttk4145.recs.driver.Driver.Call;
+import edu.ntnu.ttk4145.recs.Elevator.Direction;
 
 public class Order {
 
-	public static final long NO_ORDER = 0;
-	
-	private static int counter = 0;
-	
-	public final long id;
-	public final Call call;
+	public final Direction dir;
 	public final int floor;
 	
-	public Order(Call call, int floor){
-		this(call,floor,Elevator.getLocalElevator().getId() & 0xff00 + counter++);
-	}
-	
-	public Order(Call call, int floor, long id) {
-		this.call = call;
+	public Order(Direction dir, int floor){
+		this.dir = dir;
 		this.floor = floor;
-		this.id = id;
 	}
 
-	public long getId() {
-		return this.id;
-	}
-
-	public Call getCall() {
-		return call;
+	public Direction getDir() {
+		return dir;
 	}
 
 	public int getFloor() {
