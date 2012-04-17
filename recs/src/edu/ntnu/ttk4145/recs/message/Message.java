@@ -1,4 +1,4 @@
-package edu.ntnu.ttk4145.recs;
+package edu.ntnu.ttk4145.recs.message;
 
 import java.io.Serializable;
 
@@ -17,7 +17,7 @@ public class Message implements Serializable{
 	}
 
 	public static enum Type{
-		STATE, DONE, DO_ORDER, ORDER;
+		STATE, ORDERS, DONE;
 	}
 	
 }

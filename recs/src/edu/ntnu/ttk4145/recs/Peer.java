@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 import edu.ntnu.ttk4145.recs.manager.Manager;
+import edu.ntnu.ttk4145.recs.message.Message;
 import edu.ntnu.ttk4145.recs.network.Radio;
 
 public class Peer {

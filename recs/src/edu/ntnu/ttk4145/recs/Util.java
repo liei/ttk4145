@@ -30,23 +30,44 @@ public class Util {
 	}
 	
 	public static byte[] getLocalIp() {
-	    Enumeration<NetworkInterface> nis;
+	    byte[] ip = null;
 		try {
-			nis = NetworkInterface.getNetworkInterfaces();
+			Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
 			while(nis.hasMoreElements()) {
-				NetworkInterface ni = nis.nextElement();
-				for (Enumeration<InetAddress> ips = ni.getInetAddresses(); ips.hasMoreElements();) {
-					InetAddress ip = ips.nextElement();
-					if (!ip.isLoopbackAddress()) {
-						return ip.getAddress();
-					}
-				}
+				ip = findNoLoopbackAddress(nis.nextElement());
 			}
 		} catch (SocketException e) {}
-	    try {
-			return InetAddress.getLocalHost().getAddress();
-		} catch (UnknownHostException e) {}
-	    return new byte[]{0,0,0,0};
+		
+		if(ip == null){
+			try {
+				return InetAddress.getLocalHost().getAddress();
+			} catch (UnknownHostException e) {}
+		}
+		return ip;
+	}
+	
+	public static byte[] getLocalIp(String niName){
+		byte[] ip = null;
+		try {
+			ip = findNoLoopbackAddress(NetworkInterface.getByName(niName));
+		} catch (SocketException e) {}
+		
+		if(ip == null){
+			try {
+				return InetAddress.getLocalHost().getAddress();
+			} catch (UnknownHostException e) {}
+		}
+		return ip;
+	}
+
+	private static byte[] findNoLoopbackAddress(NetworkInterface ni) {
+		for (Enumeration<InetAddress> ips = ni.getInetAddresses(); ips.hasMoreElements();) {
+			InetAddress ip = ips.nextElement();
+			if (!ip.isLoopbackAddress()) {
+				return ip.getAddress();
+			}
+		}
+		return null;
 	}
 
 	public static long makeLocalId() {
@@ -63,6 +84,4 @@ public class Util {
 		}
 		return c;
 	}
-
-
 }

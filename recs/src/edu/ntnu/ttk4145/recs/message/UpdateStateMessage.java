@@ -1,4 +1,7 @@
-package edu.ntnu.ttk4145.recs;
+package edu.ntnu.ttk4145.recs.message;
+
+import edu.ntnu.ttk4145.recs.Elevator;
+import edu.ntnu.ttk4145.recs.Elevator.State;
 
 public class UpdateStateMessage extends Message{
 

@@ -121,6 +121,7 @@ public class Radio {
 				ioe.printStackTrace();
 			}
 		}
+		
 		/**
 		 * 
 		 * @param packet The datagram packet containing an alive message.
@@ -128,7 +129,7 @@ public class Radio {
 		 */
 		private long parseMessage(DatagramPacket packet) {
 			byte[] bytes = packet.getData();
-			return ByteBuffer.wrap(bytes).getLong();
+			return Util.longFromBytes(bytes);
 		}
 		
 		/**
@@ -151,29 +152,26 @@ public class Radio {
 		
 		private boolean running;
 		private DatagramSocket socket;
-		
+
 		public void run() {
 			InetAddress group = null;
 			try {
 				socket = new DatagramSocket(sendPort);
 				group = InetAddress.getByName(multicastGroup);
 			} catch (IOException ioe) {
-				ioe.printStackTrace();
+				System.err.printf("Failed to start AliveSender: %s%n",ioe.getMessage());
 			}
 			running = true;
 			while(running) {
-				long myId = Elevator.getLocalElevator().getId();
+				long myId = Manager.getInstance().getId();
 				byte[] aliveMessage = Util.asBytes(myId);
 				try {
 					socket.send(new DatagramPacket(aliveMessage, aliveMessage.length, group, receivePort));
-				} catch (IOException e) {
-					continue;
-				}
+				} catch (IOException e) {}
+				
 				try {
 					Thread.sleep(ALIVE_INTERVAL);
-				} catch (InterruptedException e) {
-					continue;
-				}
+				} catch (InterruptedException e) {}
 			}
 		}
 		
@@ -181,5 +179,4 @@ public class Radio {
 			running = false;
 		}
 	}
-
 }

@@ -8,44 +8,50 @@ import java.net.Socket;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import edu.ntnu.ttk4145.recs.DoOrderMessage;
 import edu.ntnu.ttk4145.recs.Elevator;
-import edu.ntnu.ttk4145.recs.Message;
-import edu.ntnu.ttk4145.recs.Order;
-import edu.ntnu.ttk4145.recs.OrderMessage;
-import edu.ntnu.ttk4145.recs.Peer;
-import edu.ntnu.ttk4145.recs.UpdateStateMessage;
-import edu.ntnu.ttk4145.recs.Util;
 import edu.ntnu.ttk4145.recs.Elevator.Direction;
+import edu.ntnu.ttk4145.recs.Order;
+import edu.ntnu.ttk4145.recs.Peer;
+import edu.ntnu.ttk4145.recs.Util;
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
+import edu.ntnu.ttk4145.recs.message.Message;
+import edu.ntnu.ttk4145.recs.message.OrderDoneMessage;
+import edu.ntnu.ttk4145.recs.message.UpdateOrdersMessage;
+import edu.ntnu.ttk4145.recs.message.UpdateStateMessage;
 import edu.ntnu.ttk4145.recs.network.Radio;
 
 public class Manager {
 	
-	private final static String MULTICAST_GROUP = "224.0.2.1";
-	private final static int SEND_PORT = 7001;
-	private final static int RECEIVE_PORT = 7002;
+	private static final String MULTICAST_GROUP = "224.0.2.1";
+	private static final int SEND_PORT = 7001;
+	private static final int RECEIVE_PORT = 7002;
 	
+	private static final long NO_ORDER = 0;
 	
 	private static Manager instance;
 	
 	public static Manager getInstance() {
 		if(instance == null){
-			instance = new Manager();
+			instance = new Manager(Util.makeLocalId());
 		}
 		return instance;
 	}
 	
-	private final long myId = Util.makeLocalId();
+	private final long myId;
 
 	public long[][] orders = new long[2][Driver.NUMBER_OF_FLOORS];
 	
 	SortedMap<Long,Peer> peers;
 	private Peer master;
 	
-	private Manager(){
+	private Manager(long id){
+		myId = id;
 		peers = new TreeMap<Long,Peer>();
+	}
+	
+	public long getId() {
+		return myId;
 	}
 	
 	/**
@@ -55,9 +61,9 @@ public class Manager {
 	public void startManager(){
 		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
 		radio.start();
+		discoverMaster();		
 		MessageListener peerListener = new MessageListener();
 		peerListener.listen();
-		discoverMaster();		
 	}
 	
 	/**
@@ -67,7 +73,7 @@ public class Manager {
 	 * @param timeOfLastAlive The time the alive message was received.
 	 * @param address The address of the peer.
 	 */
-	public void handleAliveMessage(long peerId, long timeOfLastAlive, InetAddress address) {
+	public synchronized void  handleAliveMessage(long peerId, long timeOfLastAlive, InetAddress address) {
 		if(peers.containsKey(peerId)) {
 			peers.get(peerId).updateAliveTime(timeOfLastAlive);
 		}
@@ -87,22 +93,6 @@ public class Manager {
 	 */
 	public void updatePeerState(long peerId, Elevator.State newState) {
 		peers.get(peerId).updateState(newState);
-	}
-	
-	/**
-	 * Add order to the global order queue.
-	 * @param order A order to service.
-	 */
-	private void addOrder(Order order) {
-		// TODO
-	}
-	
-	/**
-	 * 
-	 * @param order Remove an order from the local instance of the global order queue.
-	 */
-	private void removeOrder(Order order) {
-		// TODO
 	}
 	
 	/**
@@ -191,8 +181,8 @@ public class Manager {
 			if(maxOrderRating < peer.getOrderRating(order)) {
 				bestSuited = peer;
 			}
-		bestSuited.sendMessage(new DoOrderMessage(order));	
 		}
+		bestSuited.sendMessage(new UpdateOrdersMessage(orders));	
 	}
 	
 	/**
@@ -202,9 +192,7 @@ public class Manager {
 		try {
 			//Wait to receive a few alive messages before we search list of peers for a master.
 			Thread.sleep(Radio.getAliveInterval());
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		} catch (InterruptedException e) {}
 		setMaster();
 	}
 	
@@ -212,10 +200,6 @@ public class Manager {
 		master = peers.get(peers.firstKey());
 	}
 
-	public void orderDone(long orderId) {
-		System.out.printf("Order done: %d%n",orderId);
-	}
-	
 	/**
 	 * 
 	 * A class for listening to messages from the other peers on the network.
@@ -274,37 +258,46 @@ public class Manager {
 			}
 			handleMessage(message);
 		}
+		
 		private void handleMessage(Message message) {
 			switch(message.getType()) {
-				case ORDER: 
-					Manager.getInstance().addOrder(((OrderMessage) message).getOrder());
-					break;
-				case DO_ORDER:
-					DoOrderMessage doOrderMessage = (DoOrderMessage) message;
-//					Elevator.getLocalElevator().addOrder(doOrderMessage.getOrder());
-					break;
-				case DONE:
-					Manager.getInstance().removeOrder(((OrderMessage) message).getOrder());
+				case ORDERS: 
+					UpdateOrdersMessage ordersMessage = (UpdateOrdersMessage) message; 
+					setOrders(ordersMessage.getOrders());
 					break;
 				case STATE:
 					UpdateStateMessage stateMessage = (UpdateStateMessage) message;
 					peers.get(stateMessage.getElevatorId()).updateState(stateMessage.getState());
+					break;
+				case DONE:
+					OrderDoneMessage doneMessage = (OrderDoneMessage) message;
+					deleteOrder(doneMessage.getDir(),doneMessage.getFloor(),doneMessage.getElevId());
 					break;
 				default:
 					throw new RuntimeException("Unpossible!");
 			}	
 		}
 	}
-
+	
+	private synchronized void deleteOrder(Direction dir, int floor, long elevId) {
+		if(orders[dir.ordinal()][floor] == elevId){
+			orders[dir.ordinal()][floor] = NO_ORDER;
+		}
+		long[][] ordersCopy = Util.copyOf(orders);
+		for(Peer peer : peers.values()){
+			peer.sendMessage(new UpdateOrdersMessage(ordersCopy));
+		}
+	}
+	
 	public synchronized long[][] getOrders() {
 		return Util.copyOf(orders);
 	}
 
-	public void orderDone(Direction dir, int floor) {
-		orders[dir.ordinal()][floor] = Order.NO_ORDER;
+	public synchronized void setOrders(long[][] orders) {
+		this.orders = orders;
 	}
 
-	public long getId() {
-		return myId;
+	public synchronized void orderDone(Direction dir, int floor) {
+		master.sendMessage(new OrderDoneMessage(dir,floor,myId));
 	}
 }
