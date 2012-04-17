@@ -35,6 +35,7 @@ public class Peer {
 		new Thread(){
 			public void run(){
 				try {
+					System.out.printf("Send Message: %s%n",msg.getType());
 					Socket socket = new Socket(ip, Manager.getReciveport());
 					ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
 					oos.writeObject(msg);

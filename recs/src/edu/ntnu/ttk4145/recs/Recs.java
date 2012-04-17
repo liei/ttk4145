@@ -9,8 +9,8 @@ public class Recs {
 	
 	public static void main(String[] args) {
 		
-		Elevator.getLocalElevator().init();
 		Manager.getInstance().startManager();
+		Elevator.getLocalElevator().init();
 		
 	
 	}

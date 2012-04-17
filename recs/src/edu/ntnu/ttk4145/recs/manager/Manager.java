@@ -61,10 +61,10 @@ public class Manager {
 	 */
 	public void startManager(){
 		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
-		radio.start();
-		discoverMaster();		
 		MessageListener peerListener = new MessageListener();
-		peerListener.listen();
+		peerListener.start();
+		
+		radio.start();
 	}
 	
 	/**
@@ -224,9 +224,10 @@ public class Manager {
 	 * Spawns new threads to handle incoming messages.
 	 *
 	 */
-	private class MessageListener {
+	private class MessageListener extends Thread{
 		
-		private ServerSocket server = null;
+		private ServerSocket server;
+		private boolean running;
 		
 		public MessageListener() {
 			try {
@@ -236,75 +237,73 @@ public class Manager {
 			}
 		}
 		
-		private void listen() {
-			while(true) {
-				MessageHandler handler;
-				try {
-					handler = new MessageHandler(server.accept());
-					Thread t = new Thread(handler);
-					t.start();
-				} catch (Exception e) {
-				}
-			}
-		}
-	}
-	
-	/**
-	 * 
-	 * A class to handle the messages received from other peers.
-	 * The message types handled are of types ORDER, DO_ORDER,
-	 * DONE and STATE.
-	 *
-	 */
-	private class MessageHandler implements Runnable{
-		private Socket socket;
-		
-		public MessageHandler(Socket socket) {
-			this.socket = socket;
-		}
 		@Override
 		public void run() {
-			ObjectInputStream ois = null;
-			Message message = null;
-			try {
-				ois = new ObjectInputStream(socket.getInputStream());
-				message = (Message)ois.readObject();
-				ois.close();
-				socket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+			while(running) {
+				Socket sock = null;
+				try {
+					sock = server.accept();
+				} catch (IOException ioe) {
+					ioe.printStackTrace();
+				}
+				final Socket socket = sock;
+				new Thread(){
+					public void run() {
+						Message message = null;
+						try {
+							ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+							message = (Message)ois.readObject();
+							ois.close();
+							socket.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						} catch (ClassNotFoundException e) {
+							e.printStackTrace();
+						}
+						handleMessage(message);
+					}
+				}.start();
 			}
-			handleMessage(message);
 		}
 		
+		/**
+		 * 
+		 * A class to handle the messages received from other peers.
+		 * The message types handled are of types ORDER, DO_ORDER,
+		 * DONE and STATE.
+		 *
+		 */
 		private void handleMessage(Message message) {
+			if(message == null){
+				return;
+			}
 			switch(message.getType()) {
-				case UPDATE_ORDERS: 
-					UpdateOrdersMessage ordersMessage = (UpdateOrdersMessage) message; 
-					setOrders(ordersMessage.getOrders());
-					break;
-				case UPDATE_STATE:
-					UpdateStateMessage stateMessage = (UpdateStateMessage) message;
-					peers.get(stateMessage.getElevatorId()).updateState(stateMessage.getState());
-					break;
-				case ORDER_DONE:
-					OrderDoneMessage doneMessage = (OrderDoneMessage) message;
-					deleteOrder(doneMessage.getElevId(),doneMessage.getOrder());
-					break;
-				case NEW_ORDER:
-					NewOrderMessage nom = (NewOrderMessage) message;
-					if(!isMaster()){
-						master.sendMessage(nom);
-					}
-					dispatchOrder(nom.getOrder());
-					break;
-				default:
-					throw new RuntimeException("Unpossible!");
+			case UPDATE_ORDERS: 
+				UpdateOrdersMessage ordersMessage = (UpdateOrdersMessage) message; 
+				setOrders(ordersMessage.getOrders());
+				break;
+			case UPDATE_STATE:
+				UpdateStateMessage stateMessage = (UpdateStateMessage) message;
+				peers.get(stateMessage.getElevatorId()).updateState(stateMessage.getState());
+				break;
+			case ORDER_DONE:
+				OrderDoneMessage doneMessage = (OrderDoneMessage) message;
+				deleteOrder(doneMessage.getElevId(),doneMessage.getOrder());
+				break;
+			case NEW_ORDER:
+				NewOrderMessage nom = (NewOrderMessage) message;
+				if(!isMaster()){
+					master.sendMessage(nom);
+				}
+				dispatchOrder(nom.getOrder());
+				break;
+			default:
+				throw new RuntimeException("Unpossible!");
 			}	
 		}
 	}
+	
+
 	
 	private boolean isMaster() {
 		return myId == master.getId();
