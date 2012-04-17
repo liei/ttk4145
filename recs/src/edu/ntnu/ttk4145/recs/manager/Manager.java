@@ -75,16 +75,13 @@ public class Manager {
 	 * @param address The address of the peer.
 	 */
 	public synchronized void  handleAliveMessage(long peerId, long timeOfLastAlive, InetAddress address) {
-		if(peers.containsKey(peerId)) {
-			peers.get(peerId).updateAliveTime(timeOfLastAlive);
+		Peer peer = peers.get(peerId);
+		if(peer == null) {
+			peer = new Peer(address, peerId);
+			peers.put(peerId, peer);
+			setMaster();
 		}
-		else {
-			Peer newPeer = new Peer(address, peerId);
-			peers.put(peerId, newPeer);
-			if(newPeer.getId() < master.getId()) {
-				master = newPeer;
-			}
-		}
+		peer.updateAliveTime(timeOfLastAlive);
 	}
 	
 	/**
