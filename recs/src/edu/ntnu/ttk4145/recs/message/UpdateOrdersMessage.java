@@ -7,7 +7,7 @@ public class UpdateOrdersMessage extends Message{
 	private long[][] orders;
 
 	public UpdateOrdersMessage(long[][] orders) {
-		super(Type.ORDERS);
+		super(Type.UPDATE_ORDERS);
 		this.orders = orders;
 	}
 	

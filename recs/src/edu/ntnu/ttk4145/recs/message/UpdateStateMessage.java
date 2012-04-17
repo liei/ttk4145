@@ -1,7 +1,6 @@
 package edu.ntnu.ttk4145.recs.message;
 
 import edu.ntnu.ttk4145.recs.Elevator;
-import edu.ntnu.ttk4145.recs.Elevator.State;
 
 public class UpdateStateMessage extends Message{
 
@@ -12,7 +11,7 @@ public class UpdateStateMessage extends Message{
 	private long elevatorId;
 	
 	public UpdateStateMessage(long elevatorId, Elevator.State state) {
-		super(Type.STATE);
+		super(Type.UPDATE_STATE);
 		this.state = state;
 		this.elevatorId = elevatorId;
 	}

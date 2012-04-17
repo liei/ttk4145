@@ -16,6 +16,7 @@ import edu.ntnu.ttk4145.recs.Util;
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
 import edu.ntnu.ttk4145.recs.message.Message;
+import edu.ntnu.ttk4145.recs.message.NewOrderMessage;
 import edu.ntnu.ttk4145.recs.message.OrderDoneMessage;
 import edu.ntnu.ttk4145.recs.message.UpdateOrdersMessage;
 import edu.ntnu.ttk4145.recs.message.UpdateStateMessage;
@@ -77,16 +78,13 @@ public class Manager {
 	 * @param address The address of the peer.
 	 */
 	public synchronized void  handleAliveMessage(long peerId, long timeOfLastAlive, InetAddress address) {
-		if(peers.containsKey(peerId)) {
-			peers.get(peerId).updateAliveTime(timeOfLastAlive);
+		Peer peer = peers.get(peerId);
+		if(peer == null) {
+			peer = new Peer(address, peerId);
+			peers.put(peerId, peer);
+			setMaster();
 		}
-		else {
-			Peer newPeer = new Peer(address, peerId);
-			peers.put(peerId, newPeer);
-			if(newPeer.getId() < master.getId()) {
-				master = newPeer;
-			}
-		}
+		peer.updateAliveTime(timeOfLastAlive);
 	}
 	
 	/**
@@ -129,14 +127,8 @@ public class Manager {
 	 * @param floor The floor where the button was pressed.
 	 */
 	public void registerCall(Call call, int floor) {
-		orders[call.ordinal()][floor] = myId;
 		System.out.printf("registerCall (%s,%d) = %d",call,floor,myId);
-		Elevator.getLocalElevator().updateElevatorState();
-		//Elevator.getLocalElevator().addOrder(order);
-//		for (Peer peer : peers.values()) {
-//			// TODO
-////			peer.sendMessage(new OrderMessage(order));
-//		}
+		master.sendMessage(new NewOrderMessage(new Order(Direction.values()[call.ordinal()],floor)));
 	}
 	
 	/**
@@ -343,22 +335,33 @@ public class Manager {
 		
 		private void handleMessage(Message message) {
 			switch(message.getType()) {
-				case ORDERS: 
+				case UPDATE_ORDERS: 
 					UpdateOrdersMessage ordersMessage = (UpdateOrdersMessage) message; 
 					setOrders(ordersMessage.getOrders());
 					break;
-				case STATE:
+				case UPDATE_STATE:
 					UpdateStateMessage stateMessage = (UpdateStateMessage) message;
 					peers.get(stateMessage.getElevatorId()).updateState(stateMessage.getState());
 					break;
-				case DONE:
+				case ORDER_DONE:
 					OrderDoneMessage doneMessage = (OrderDoneMessage) message;
 					deleteOrder(doneMessage.getElevId(),doneMessage.getOrder());
+					break;
+				case NEW_ORDER:
+					NewOrderMessage nom = (NewOrderMessage) message;
+					if(!isMaster()){
+						master.sendMessage(nom);
+					}
+					dispatchOrder(nom.getOrder());
 					break;
 				default:
 					throw new RuntimeException("Unpossible!");
 			}	
 		}
+	}
+	
+	private boolean isMaster() {
+		return myId == master.getId();
 	}
 	
 	private synchronized void deleteOrder(long elevId, Order order){
@@ -383,6 +386,7 @@ public class Manager {
 
 	public synchronized void setOrders(long[][] orders) {
 		this.orders = orders;
+		Elevator.getLocalElevator().updateElevatorState();
 	}
 
 	public synchronized void orderDone(Direction dir, int floor) {

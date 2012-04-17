@@ -10,7 +10,7 @@ public class OrderDoneMessage extends Message {
 	private Order order;
 
 	public OrderDoneMessage(long elevId, Order order) {
-		super(Type.DONE);
+		super(Type.ORDER_DONE);
 		this.elevId = elevId;
 		this.order = order;
 	}

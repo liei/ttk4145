@@ -17,7 +17,7 @@ public class Message implements Serializable{
 	}
 
 	public static enum Type{
-		STATE, ORDERS, DONE;
+		UPDATE_STATE, UPDATE_ORDERS, ORDER_DONE, NEW_ORDER;
 	}
 	
 }
