@@ -80,7 +80,6 @@ public class Elevator {
 		if(state.stopped || state.obstructed || state.doorsOpen){
 			;
 		} else {
-
 			if(state.atFloor) {
 				// Stopped at a floor
 				long[][] orders = Manager.getInstance().getOrders();
@@ -105,10 +104,16 @@ public class Elevator {
 				
 				if((callsOver || callUp) && !(callsUnder || callDown)){
 					state.dir = Direction.UP;
-				} else if((callsUnder || callDown) && !(callsOver || callUp)){
+				} else if((!(callsOver || callUp) && callsUnder || callDown)){
 					state.dir = Direction.DOWN;
+				} else if((callsOver || callUp) && state.dir == Direction.UP){
+					state.dir = Direction.UP;
+				} else if((callsUnder || callDown) && state.dir == Direction.DOWN){
+					state.dir = Direction.DOWN;
+				} else {
+					state.dir = Direction.NONE;
 				}
-
+				
 				long orderId = state.dir != Direction.NONE ? orders[state.dir.ordinal()][state.floor] : 0;
 				
 				System.out.printf("read O(%s,%d) = %n",state.dir,state.floor,orderId);
@@ -121,10 +126,6 @@ public class Elevator {
 						Manager.getInstance().orderDone(state.dir,state.floor);
 					}
 					state.commands[state.floor] = false;
-				}
-					
-				if(!callsOver && !callsUnder){
-					state.dir = Direction.NONE;
 				}
 			}
 		}
