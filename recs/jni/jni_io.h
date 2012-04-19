@@ -8,7 +8,17 @@
 extern "C" {
 #endif
 #undef edu_ntnu_ttk4145_recs_driver_Driver_NUMBER_OF_FLOORS
-#define edu_ntnu_ttk4145_recs_driver_Driver_NUMBER_OF_FLOORS 0L
+#define edu_ntnu_ttk4145_recs_driver_Driver_NUMBER_OF_FLOORS 4L
+#undef edu_ntnu_ttk4145_recs_driver_Driver_PORT0
+#define edu_ntnu_ttk4145_recs_driver_Driver_PORT0 1L
+#undef edu_ntnu_ttk4145_recs_driver_Driver_PORT1
+#define edu_ntnu_ttk4145_recs_driver_Driver_PORT1 2L
+#undef edu_ntnu_ttk4145_recs_driver_Driver_PORT2
+#define edu_ntnu_ttk4145_recs_driver_Driver_PORT2 3L
+#undef edu_ntnu_ttk4145_recs_driver_Driver_PORT3
+#define edu_ntnu_ttk4145_recs_driver_Driver_PORT3 3L
+#undef edu_ntnu_ttk4145_recs_driver_Driver_PORT4
+#define edu_ntnu_ttk4145_recs_driver_Driver_PORT4 3L
 #undef edu_ntnu_ttk4145_recs_driver_Driver_MOTOR
 #define edu_ntnu_ttk4145_recs_driver_Driver_MOTOR 256L
 #undef edu_ntnu_ttk4145_recs_driver_Driver_FLOOR_DOWN2
@@ -87,6 +97,14 @@ extern "C" {
  * Signature: ()I
  */
 JNIEXPORT jint JNICALL Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1init
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     edu_ntnu_ttk4145_recs_driver_Driver
+ * Method:    io_close
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1close
   (JNIEnv *, jobject);
 
 /*

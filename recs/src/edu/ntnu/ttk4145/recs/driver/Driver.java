@@ -4,6 +4,12 @@ public abstract class Driver {
 	
 	public static final int NUMBER_OF_FLOORS = 4;
 
+	private static final int PORT0			= 1;
+	private static final int PORT1			= 2;
+	private static final int PORT2			= 3;
+	private static final int PORT3			= 3;
+	private static final int PORT4			= 3;
+	
 	private static final int MOTOR          = 0x100 +  0;
 
 	private static final int FLOOR_DOWN2    = 0x200 +  0;
@@ -92,6 +98,8 @@ public abstract class Driver {
 	}
 
 	private native int io_init();
+	
+	private native int io_close();
 	
 	private native int io_read_bit(int channel);
 

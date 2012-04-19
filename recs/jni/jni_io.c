@@ -1,7 +1,13 @@
 
 #include <comedilib.h>
-#include "channels.h"
 #include "jni_io.h"
+
+#define PORT0 edu_ntnu_ttk4145_recs_driver_Driver_PORT0
+#define PORT1 edu_ntnu_ttk4145_recs_driver_Driver_PORT1
+#define PORT2 edu_ntnu_ttk4145_recs_driver_Driver_PORT2
+#define PORT3 edu_ntnu_ttk4145_recs_driver_Driver_PORT3
+#define PORT4 edu_ntnu_ttk4145_recs_driver_Driver_PORT4
+
 
 static comedi_t *it_g = NULL;
 
@@ -30,6 +36,18 @@ Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1init
   }
   return (status != -1);
 }
+
+/*
+ * Class:     edu_ntnu_ttk4145_recs_driver_Driver
+ * Method:    io_close
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL 
+Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1close
+(JNIEnv *env, jobject this){
+  return comedi_close(it_g);
+}
+
 
 /*
  * Class:     edu_ntnu_ttk4145_recs_driver_Driver
