@@ -189,13 +189,14 @@ public class Manager {
 	 */
 	private Peer findBestPeerForOrder(Order order){
 		Peer bestPeer = null;
-		double best = 1;
+		double best = -1;
 		for(Peer peer : peers.values()) {
 			double value = calculateOrderMatch(peer, order);
-			if(value < best) {
+			if(value > best) {
 				best = value; 
 				bestPeer = peer;
 			}
+			if(best > 0.95) break;
 		}
 		return bestPeer;
 	}
