@@ -217,7 +217,7 @@ public abstract class Driver {
 		stopButtonDelay = Math.max(0,delay);
 	}
 	
-	public void startCallbacks(){
+	public Driver startCallbacks(){
 		callback = new Thread(new Runnable(){
 			@Override
 			public void run() {
@@ -273,6 +273,7 @@ public abstract class Driver {
 			}
 		});
 		callback.start();
+		return this;
 	}
 	
 	public void stopCallbacks() {
