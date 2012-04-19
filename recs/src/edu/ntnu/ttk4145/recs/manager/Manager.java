@@ -142,12 +142,10 @@ public class Manager {
 	 * @param peer The peer who has timed out.
 	 */
 	public synchronized void removePeer(Peer peer) {
-		peers.remove(peer);
-		if(peer == master) {
-			setMaster();
-			if(master.getId() == myId) {
-				redistributeOrders(peer);
-			}
+		peers.remove(peer.getId());
+		setMaster();
+		if(isMaster()){
+			redistributeOrders(peer);
 		}
 	}
 	
@@ -167,9 +165,6 @@ public class Manager {
 		}
 		updatePeerOrders();
 	}
-	
-	
-	
 	
 	/**
 	 * 
