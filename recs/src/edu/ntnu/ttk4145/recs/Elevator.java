@@ -163,7 +163,7 @@ public class Elevator {
 		driver.setStopLamp(state.stopped);
 		driver.setDoorOpenLamp(state.doorsOpen);
 		driver.setFloorIndicator(state.floor);
-		if(state.atFloor || state.doorsOpen || state.stopped || state.obstructed){
+		if(state.doorsOpen || state.stopped || state.obstructed){
 			driver.setSpeed(0);
 		} else {
 			driver.setSpeed(state.dir.speed);
