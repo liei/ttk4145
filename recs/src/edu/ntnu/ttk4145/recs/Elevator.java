@@ -104,7 +104,7 @@ public class Elevator {
 				
 				if((callsOver || callUp) && !(callsUnder || callDown)){
 					state.dir = Direction.UP;
-				} else if((!(callsOver || callUp) && callsUnder || callDown)){
+				} else if((!(callsOver || callUp) && (callsUnder || callDown)){
 					state.dir = Direction.DOWN;
 				} else if((callsOver || callUp) && state.dir == Direction.UP){
 					state.dir = Direction.UP;
