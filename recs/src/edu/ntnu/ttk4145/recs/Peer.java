@@ -30,6 +30,7 @@ public class Peer {
 			Manager.getInstance().removePeer(this);
 			return false;
 		}
+		final Peer peer = this;
 		new Thread(){
 			public void run(){
 				try {
@@ -39,7 +40,8 @@ public class Peer {
 					oos.close();
 					socket.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					System.err.println("Could not send message to peer, remove from peers.");
+					Manager.getInstance().removePeer(peer);
 				}
 			}
 		}.start();
