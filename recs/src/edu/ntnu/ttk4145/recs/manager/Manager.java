@@ -1,10 +1,6 @@
 package edu.ntnu.ttk4145.recs.manager;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -15,7 +11,7 @@ import edu.ntnu.ttk4145.recs.Peer;
 import edu.ntnu.ttk4145.recs.Util;
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
-import edu.ntnu.ttk4145.recs.message.Message;
+import edu.ntnu.ttk4145.recs.message.MessageListener;
 import edu.ntnu.ttk4145.recs.message.NewOrderMessage;
 import edu.ntnu.ttk4145.recs.message.OrderDoneMessage;
 import edu.ntnu.ttk4145.recs.message.UpdateOrdersMessage;
@@ -63,8 +59,7 @@ public class Manager {
 	 * Send and receive orders to and from the local elevator.
 	 */
 	public void startManager(){
-		MessageListener peerListener = new MessageListener();
-		peerListener.start();
+		MessageListener.startListener(RECEIVE_PORT);
 		
 		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
 		radio.start();
@@ -297,57 +292,6 @@ public class Manager {
 			master.sendMessage(new NewOrderMessage(order));
 		} else {
 			dispatchOrder(order);
-		}
-	}
-	
-	/**
-	 * 
-	 * A class for listening to messages from the other peers on the network.
-	 * Spawns new threads to handle incoming messages.
-	 *
-	 */
-	private class MessageListener extends Thread{
-		
-		private ServerSocket server;
-		private boolean running;
-		
-		public MessageListener() {
-			try {
-				server = new ServerSocket(RECEIVE_PORT);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		@Override
-		public void run() {
-			running = true;
-			while(running) {
-				try {
-					handleMessage(server.accept());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
-		private void handleMessage(final Socket socket) {
-			new Thread(){
-				public void run() {
-					Message message = null;
-					try {
-						ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-						message = (Message)ois.readObject();
-						ois.close();
-						socket.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (ClassNotFoundException e) {
-						e.printStackTrace();
-					}
-					message.handle();
-				}
-			}.start();
 		}
 	}
 }
