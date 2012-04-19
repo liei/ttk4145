@@ -1,25 +1,29 @@
 package edu.ntnu.ttk4145.recs.message;
 
 import edu.ntnu.ttk4145.recs.Order;
+import edu.ntnu.ttk4145.recs.manager.Manager;
 
-public class OrderDoneMessage extends Message {
+public class OrderDoneMessage implements Message{
 
 	private static final long serialVersionUID = -4851917575955984284L;
 
-	private long elevId;
+	private long peerId;
 	private Order order;
 
 	public OrderDoneMessage(long elevId, Order order) {
-		super(Type.ORDER_DONE);
-		this.elevId = elevId;
+		this.peerId = elevId;
 		this.order = order;
 	}
 	
 	public long getElevId(){
-		return elevId;
+		return peerId;
 	}
 	
 	public Order getOrder(){
 		return order;
+	}
+
+	public void handle() {
+		Manager.getInstance().deleteOrder(peerId,order);		
 	}
 }

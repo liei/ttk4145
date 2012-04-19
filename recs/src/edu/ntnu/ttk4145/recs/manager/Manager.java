@@ -92,7 +92,7 @@ public class Manager {
 	 * @param peerId The Id of the peer.
 	 * @param newState The peer's new state.
 	 */
-	public void updatePeerState(long peerId, Elevator.State newState) {
+	public synchronized void updatePeerState(long peerId, Elevator.State newState) {
 		peers.get(peerId).updateState(newState);
 	}
 	
@@ -126,7 +126,7 @@ public class Manager {
 	 * @param button The button that was pressed.
 	 * @param floor The floor where the button was pressed.
 	 */
-	public void registerCall(Call call, int floor) {
+	public synchronized void registerCall(Call call, int floor) {
 		System.out.printf("registerCall (%s,%d)%n",call,floor);
 		master.sendMessage(new NewOrderMessage(new Order(Direction.values()[call.ordinal()],floor)));
 	}
@@ -135,7 +135,7 @@ public class Manager {
 	 * Notify the peers about a change in elevator state.
 	 * @param state The new elevator state.
 	 */
-	public void sendUpdateStateMessages(Elevator.State state){
+	public synchronized void sendUpdateStateMessages(Elevator.State state){
 		UpdateStateMessage updateStateMessage = new UpdateStateMessage(myId, state);
 		for(Peer peer : peers.values()){
 			 peer.sendMessage(updateStateMessage);
@@ -146,7 +146,7 @@ public class Manager {
 	 * Removes a peer from the list of all active peers.
 	 * @param peer The peer who has timed out.
 	 */
-	public void removePeer(Peer peer) {
+	public synchronized void removePeer(Peer peer) {
 		peers.remove(peer);
 		if(peer == master) {
 			setMaster();
@@ -258,101 +258,12 @@ public class Manager {
 	private void setMaster() {
 		master = peers.get(peers.firstKey());
 	}
-
-	/**
-	 * 
-	 * A class for listening to messages from the other peers on the network.
-	 * Spawns new threads to handle incoming messages.
-	 *
-	 */
-	private class MessageListener extends Thread{
-		
-		private ServerSocket server;
-		private boolean running;
-		
-		public MessageListener() {
-			try {
-				server = new ServerSocket(RECEIVE_PORT);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		@Override
-		public void run() {
-			running = true;
-			while(running) {
-				Socket sock = null;
-				try {
-					System.out.println("waiting");
-					sock = server.accept();
-				} catch (IOException ioe) {
-					ioe.printStackTrace();
-				}
-				System.out.println("Got message");
-				final Socket socket = sock;
-				new Thread(){
-					public void run() {
-						Message message = null;
-						try {
-							ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-							message = (Message)ois.readObject();
-							ois.close();
-							socket.close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						} catch (ClassNotFoundException e) {
-							e.printStackTrace();
-						}
-						handleMessage(message);
-					}
-				}.start();
-			}
-		}
-		
-		/**
-		 * 
-		 * A class to handle the messages received from other peers.
-		 * The message types handled are of types ORDER, DO_ORDER,
-		 * DONE and STATE.
-		 *
-		 */
-		private void handleMessage(Message message) {
-			if(message == null){
-				return;
-			}
-			System.out.printf("Received msg: %s%n",message.getType());
-			switch(message.getType()) {
-			case UPDATE_ORDERS: 
-				UpdateOrdersMessage ordersMessage = (UpdateOrdersMessage) message; 
-				setOrders(ordersMessage.getOrders());
-				break;
-			case UPDATE_STATE:
-				UpdateStateMessage stateMessage = (UpdateStateMessage) message;
-				peers.get(stateMessage.getElevatorId()).updateState(stateMessage.getState());
-				break;
-			case ORDER_DONE:
-				OrderDoneMessage doneMessage = (OrderDoneMessage) message;
-				deleteOrder(doneMessage.getElevId(),doneMessage.getOrder());
-				break;
-			case NEW_ORDER:
-				NewOrderMessage nom = (NewOrderMessage) message;
-				if(!isMaster()){
-					master.sendMessage(nom);
-				}
-				dispatchOrder(nom.getOrder());
-				break;
-			default:
-				throw new RuntimeException("Unpossible!");
-			}	
-		}
-	}
 	
 	private boolean isMaster() {
 		return myId == master.getId();
 	}
 	
-	private synchronized void deleteOrder(long elevId, Order order){
+	public synchronized void deleteOrder(long elevId, Order order){
 		Direction dir = order.getDir();
 		int floor = order.floor;
 		if(orders[dir.ordinal()][floor] == elevId){
@@ -379,5 +290,64 @@ public class Manager {
 
 	public synchronized void orderDone(Direction dir, int floor) {
 		master.sendMessage(new OrderDoneMessage(myId,new Order(dir,floor)));
+	}
+
+	public synchronized void addOrder(Order order) {
+		if(!isMaster()){
+			master.sendMessage(new NewOrderMessage(order));
+		} else {
+			dispatchOrder(order);
+		}
+	}
+	
+	/**
+	 * 
+	 * A class for listening to messages from the other peers on the network.
+	 * Spawns new threads to handle incoming messages.
+	 *
+	 */
+	private class MessageListener extends Thread{
+		
+		private ServerSocket server;
+		private boolean running;
+		
+		public MessageListener() {
+			try {
+				server = new ServerSocket(RECEIVE_PORT);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		@Override
+		public void run() {
+			running = true;
+			while(running) {
+				try {
+					handleMessage(server.accept());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		private void handleMessage(final Socket socket) {
+			new Thread(){
+				public void run() {
+					Message message = null;
+					try {
+						ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+						message = (Message)ois.readObject();
+						ois.close();
+						socket.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (ClassNotFoundException e) {
+						e.printStackTrace();
+					}
+					message.handle();
+				}
+			}.start();
+		}
 	}
 }

@@ -5,9 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.nio.ByteBuffer;
 
-import edu.ntnu.ttk4145.recs.Elevator;
 import edu.ntnu.ttk4145.recs.Util;
 import edu.ntnu.ttk4145.recs.manager.Manager;
 /**
@@ -24,7 +22,7 @@ public class Radio {
 	private AliveSender sender;
 	AliveListener listener;
 	private final static int ALIVE_INTERVAL = 1000; //ms
-	private final static int ALIVE_TIMEOUT = 5*ALIVE_INTERVAL;
+	private final static int ALIVE_TIMEOUT = 5 * ALIVE_INTERVAL;
 	
 	/**
 	 * 

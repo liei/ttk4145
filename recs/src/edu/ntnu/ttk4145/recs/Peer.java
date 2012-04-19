@@ -10,11 +10,10 @@ import edu.ntnu.ttk4145.recs.message.Message;
 import edu.ntnu.ttk4145.recs.network.Radio;
 
 public class Peer {
-
 	
+	private long id;
 	private InetAddress ip;
 	private long timeOfLastAlive;
-	private long id;
 	private Elevator.State state;
 	
 	public Peer(InetAddress address, long id) {
@@ -31,11 +30,9 @@ public class Peer {
 			Manager.getInstance().removePeer(this);
 			return false;
 		}
-		
 		new Thread(){
 			public void run(){
 				try {
-					System.out.printf("Send Message: %s%n",msg.getType());
 					Socket socket = new Socket(ip, Manager.getReciveport());
 					ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
 					oos.writeObject(msg);
@@ -56,10 +53,7 @@ public class Peer {
 	}
 	
 	private boolean hasTimedOut() {
-		if(timeOfLastAlive + Radio.getAliveTimeout() < System.currentTimeMillis()) {
-			return true;
-		}
-		return false;
+		return (timeOfLastAlive + Radio.getAliveTimeout()) < System.currentTimeMillis();
 	}
 	
 	public long getId() {

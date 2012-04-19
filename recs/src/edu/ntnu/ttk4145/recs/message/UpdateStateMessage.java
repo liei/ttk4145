@@ -1,19 +1,18 @@
 package edu.ntnu.ttk4145.recs.message;
 
 import edu.ntnu.ttk4145.recs.Elevator;
+import edu.ntnu.ttk4145.recs.manager.Manager;
 
-public class UpdateStateMessage extends Message{
+public class UpdateStateMessage implements Message{
 
 	private static final long serialVersionUID = 1684296774611243683L;
 
+	private long peerId;
 	private Elevator.State state;
-
-	private long elevatorId;
 	
 	public UpdateStateMessage(long elevatorId, Elevator.State state) {
-		super(Type.UPDATE_STATE);
 		this.state = state;
-		this.elevatorId = elevatorId;
+		this.peerId = elevatorId;
 	}
 	
 	public Elevator.State getState(){
@@ -21,6 +20,11 @@ public class UpdateStateMessage extends Message{
 	}
 	
 	public long getElevatorId() {
-		return elevatorId;
+		return peerId;
+	}
+
+	@Override
+	public void handle() {
+		Manager.getInstance().updatePeerState(peerId, state);
 	}
 }
