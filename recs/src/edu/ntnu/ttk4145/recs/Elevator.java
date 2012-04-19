@@ -107,7 +107,7 @@ public class Elevator {
 					state.dir = Direction.UP;
 				} else if((callsUnder || callDown) && !(callsOver || callUp)){
 					state.dir = Direction.DOWN;
-				} 
+				}
 
 				long orderId = state.dir != Direction.NONE ? orders[state.dir.ordinal()][state.floor] : 0;
 				
@@ -123,9 +123,7 @@ public class Elevator {
 					state.commands[state.floor] = false;
 				}
 					
-				if(callsOver || callsUnder){
-					state.atFloor = false;
-				} else {
+				if(!callsOver && !callsUnder){
 					state.dir = Direction.NONE;
 				}
 			}
