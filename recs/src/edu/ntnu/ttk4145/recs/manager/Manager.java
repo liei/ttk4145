@@ -21,7 +21,6 @@ import edu.ntnu.ttk4145.recs.network.Radio;
 public class Manager {
 	
 	private static final String MULTICAST_GROUP = "224.0.2.1";
-	private static final int SEND_PORT = 7001;
 	private static final int RECEIVE_PORT = 7002;
 	
 	private static final long NO_ORDER = 0;
@@ -43,7 +42,6 @@ public class Manager {
 	public long[][] orders = new long[2][Driver.NUMBER_OF_FLOORS];
 	
 	SortedMap<Long,Peer> peers;
-	private Peer master;
 	
 	private Manager(long id){
 		myId = id;
@@ -61,8 +59,16 @@ public class Manager {
 	public void startManager(){
 		MessageListener.startListener(RECEIVE_PORT);
 		
-		Radio radio = new Radio(MULTICAST_GROUP, SEND_PORT, RECEIVE_PORT);
+		Radio radio = new Radio(MULTICAST_GROUP, RECEIVE_PORT);
 		radio.start();
+		
+
+		while(true){
+			try {
+				Thread.sleep(Radio.getAliveTimeout());
+			} catch (InterruptedException e) {}
+			updatePeers();
+		}
 	}
 	
 	/**
@@ -77,7 +83,6 @@ public class Manager {
 		if(peer == null) {
 			peer = new Peer(address, peerId);
 			peers.put(peerId, peer);
-			setMaster();
 		}
 		peer.updateAliveTime(timeOfLastAlive);
 	}
@@ -88,7 +93,14 @@ public class Manager {
 	 * @param newState The peer's new state.
 	 */
 	public synchronized void updatePeerState(long peerId, Elevator.State newState) {
-		peers.get(peerId).updateState(newState);
+		Peer peer = peers.get(peerId);
+		if(peer != null){
+			if(peer.updateAndEvaluateState(newState) && isMaster()){
+				redistributeOrders(peer);
+			}
+		} else {
+			System.err.printf("No peer with peerId: %d, disregard updateMessage.",peerId);
+		}
 	}
 	
 	/**
@@ -101,14 +113,6 @@ public class Manager {
 
 	/**
 	 * 
-	 * @return The port used to send TCP and UDP messages.
-	 */
-	public static int getSendport() {
-		return SEND_PORT;
-	}
-	
-	/**
-	 * 
 	 * @return The port used to receive TCP and UDP messages.
 	 */
 	public static int getReciveport() {
@@ -116,16 +120,20 @@ public class Manager {
 	}
 
 	/**
-	 * Register a local call for elevator. Notice every peer that a call has been made.
+	 * Register a local call for elevator. Send message to master.
 	 * 
 	 * @param button The button that was pressed.
 	 * @param floor The floor where the button was pressed.
 	 */
 	public synchronized void registerCall(Call call, int floor) {
 		System.out.printf("registerCall (%s,%d)%n",call,floor);
-		master.sendMessage(new NewOrderMessage(new Order(Direction.values()[call.ordinal()],floor)));
+		getMaster().sendMessage(new NewOrderMessage(new Order(Direction.values()[call.ordinal()],floor)));
 	}
 	
+	private Peer getMaster() {
+		return peers.get(peers.firstKey());
+	}
+
 	/**
 	 * Notify the peers about a change in elevator state.
 	 * @param state The new elevator state.
@@ -138,22 +146,13 @@ public class Manager {
 	}
 	
 	/**
-	 * Removes a peer from the list of all active peers.
-	 * @param peer The peer who has timed out.
-	 */
-	public synchronized void removePeer(Peer peer) {
-		peers.remove(peer.getId());
-		setMaster();
-		if(isMaster()){
-			redistributeOrders(peer);
-		}
-	}
-	
-	/**
 	 * This peer has died and his orders are distributed to the other peers.
 	 * @param peer Dead peer.
 	 */
-	private void redistributeOrders(Peer peer) {
+	public synchronized void redistributeOrders(Peer peer) {
+		if(!isMaster()){
+			return;
+		}
 		for(int dir = 0; dir < orders.length; dir++){
 			for(int floor = 0; floor < orders[dir].length; floor++){
 				if(orders[dir][floor] == peer.getId()){
@@ -184,14 +183,14 @@ public class Manager {
 	 */
 	private Peer findBestPeerForOrder(Order order){
 		Peer bestPeer = null;
-		double best = -1;
+		double bestOm = -1;
 		for(Peer peer : peers.values()) {
-			double value = calculateOrderMatch(peer, order);
-			if(value > best) {
-				best = value; 
+			double om = calculateOrderMatch(peer, order);
+			if(om > bestOm) {
+				bestOm = om; 
 				bestPeer = peer;
 			}
-			if(best > 0.95) break;
+			if(bestOm > 0.95) break;
 		}
 		return bestPeer;
 	}
@@ -210,7 +209,19 @@ public class Manager {
 			return 0.0;
 		}
 		
-		int orderBacklog = 0;
+		double orderBacklog = 0;
+
+//		for (int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++) {
+//			if(orders[Direction.UP.ordinal()][floor] == peer.getId()) {
+//				orderBacklog += ;
+//			} 
+//				
+//			if(orders[Direction.DOWN.ordinal()][floor] == peer.getId()){
+//				if(order.floor <)
+//				
+//				orderBacklog += ;
+//			}
+//		}
 		
 		for (int direction = 0; direction < 2; direction++) {
 			for (int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++) {
@@ -241,17 +252,13 @@ public class Manager {
 			return 1.0;
 		}
 		
-		double numFloorScalingFactor = 1 / Driver.NUMBER_OF_FLOORS;
+		double numFloorScalingFactor = 1.0 / Driver.NUMBER_OF_FLOORS;
 		
 		return (orderBacklog + elevatorDirOppositeOrder) * numFloorScalingFactor;
 	}
 	
-	private void setMaster() {
-		master = peers.get(peers.firstKey());
-	}
-	
 	private boolean isMaster() {
-		return myId == master.getId();
+		return myId == getMaster().getId();
 	}
 	
 	public synchronized void deleteOrder(long elevId, Order order){
@@ -280,14 +287,22 @@ public class Manager {
 	}
 
 	public synchronized void orderDone(Direction dir, int floor) {
-		master.sendMessage(new OrderDoneMessage(myId,new Order(dir,floor)));
+		getMaster().sendMessage(new OrderDoneMessage(myId,new Order(dir,floor)));
 	}
 
 	public synchronized void addOrder(Order order) {
 		if(!isMaster()){
-			master.sendMessage(new NewOrderMessage(order));
+			getMaster().sendMessage(new NewOrderMessage(order));
 		} else {
 			dispatchOrder(order);
+		}
+	}
+
+	private synchronized void updatePeers() {
+		for(Peer peer : peers.values()){
+			if(peer.hasTimedOut()){
+				redistributeOrders(peer);
+			}
 		}
 	}
 }

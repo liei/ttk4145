@@ -18,11 +18,10 @@ public class Radio {
 	
 	private String multicastGroup;
 	private int receivePort;
-	private int sendPort;
 	private AliveSender sender;
-	AliveListener listener;
-	private final static int ALIVE_INTERVAL = 1000; //ms
-	private final static int ALIVE_TIMEOUT = 5 * ALIVE_INTERVAL;
+	private AliveListener listener;
+	private final static int ALIVE_INTERVAL = 100; //ms
+	private final static int ALIVE_TIMEOUT  = 5 * ALIVE_INTERVAL;
 	
 	/**
 	 * 
@@ -30,8 +29,7 @@ public class Radio {
 	 * @param sendPort The port to send UDP messages to.
 	 * @param receivePort The port used to receive messages.
 	 */
-	public Radio(String multicastGroup, int sendPort, int receivePort) {
-		this.sendPort = sendPort;
+	public Radio(String multicastGroup, int receivePort) {
 		this.receivePort = receivePort;
 		this.multicastGroup = multicastGroup;
 		sender = new AliveSender();
@@ -154,12 +152,12 @@ public class Radio {
 		public void run() {
 			InetAddress group = null;
 			try {
-				socket = new DatagramSocket(sendPort);
+				socket = new DatagramSocket();
 				group = InetAddress.getByName(multicastGroup);
+				running = true;
 			} catch (IOException ioe) {
 				System.err.printf("Failed to start AliveSender: %s%n",ioe.getMessage());
 			}
-			running = true;
 			while(running) {
 				long myId = Manager.getInstance().getId();
 				byte[] aliveMessage = Util.asBytes(myId);

@@ -25,12 +25,50 @@ public class Peer {
 		}
 	}
 	
+	public long getId() {
+		return id;
+	}
+	
+	public InetAddress getInetAddress() {
+		return ip;
+	}
+	
+	/**
+	 * Update the state for this peer, returns true if this peer
+	 * needs to have it's orders redistributed.
+	 * @param newState
+	 * @return
+	 */
+	public boolean updateAndEvaluateState(Elevator.State newState) {
+		boolean redistribute = false;
+		if(!state.isStopped() && newState.isStopped()){
+			redistribute = true;
+		}
+		
+		this.state = newState;
+		return redistribute;
+	}
+	
+	public Elevator.State getState() {
+		return state;
+	}
+	
+	public void updateAliveTime(long timeOfLastAlive) {
+		if(timeOfLastAlive > this.timeOfLastAlive) {
+			this.timeOfLastAlive = timeOfLastAlive;	
+		}
+	}
+	
+	public boolean hasTimedOut() {
+		return (timeOfLastAlive + Radio.getAliveTimeout()) < System.currentTimeMillis();
+	}
+	
+	
 	public boolean sendMessage(final Message msg){
-		if(hasTimedOut()) {
-			Manager.getInstance().removePeer(this);
+		if(hasTimedOut()){
 			return false;
 		}
-		final Peer peer = this;
+		
 		new Thread(){
 			public void run(){
 				try {
@@ -40,37 +78,10 @@ public class Peer {
 					oos.close();
 					socket.close();
 				} catch (IOException e) {
-					System.err.println("Could not send message to peer, remove from peers.");
-					Manager.getInstance().removePeer(peer);
+					System.err.println("Could not send message to peer.");
 				}
 			}
 		}.start();
 		return true;
-	}
-	
-	public void updateAliveTime(long timeOfLastAlive) {
-		if(timeOfLastAlive > this.timeOfLastAlive) {
-			this.timeOfLastAlive = timeOfLastAlive;	
-		}
-	}
-	
-	private boolean hasTimedOut() {
-		return (timeOfLastAlive + Radio.getAliveTimeout()) < System.currentTimeMillis();
-	}
-	
-	public long getId() {
-		return id;
-	}
-	
-	public InetAddress getInetAddress() {
-		return ip;
-	}
-	
-	public void updateState(Elevator.State newState) {
-		this.state = newState;
-	}
-	
-	public Elevator.State getState() {
-		return state;
 	}
 }
