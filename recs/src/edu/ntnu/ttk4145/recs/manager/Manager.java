@@ -158,7 +158,7 @@ public class Manager {
 				if(orders[dir][floor] == peer.getId()){
 					Order order = new Order(Direction.values()[dir],floor);
 					Peer best = findBestPeerForOrder(order);
-					orders[order.getDir().ordinal()][order.getFloor()] = best.getId();
+					orders[order.getDirection().ordinal()][order.getFloor()] = best.getId();
 				}
 			}
 		}
@@ -172,7 +172,7 @@ public class Manager {
 	 */
 	private void dispatchOrder(Order order){
 		Peer best = findBestPeerForOrder(order);
-		orders[order.getDir().ordinal()][order.getFloor()] = best.getId();
+		orders[order.getDirection().ordinal()][order.getFloor()] = best.getId();
 		updatePeerOrders();
 	}
 	
@@ -199,7 +199,7 @@ public class Manager {
 	 * Used to evaluate how good a match this order is with this peer. 
 	 * @param peer The peer to evaluate.
 	 * @param order The order to be serviced.
-	 * @return A double expressing how good a match this order is for the given peer.
+	 * @return A double, in the range [0,1], expressing how good a match this order is for the given peer.
 	 * Where 0 indicates that this peer can't possibly service this order.
 	 */
 	private double calculateOrderMatch(Peer peer, Order order){
@@ -209,52 +209,37 @@ public class Manager {
 			return 0.0;
 		}
 		
-		double orderBacklog = 0;
-
-//		for (int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++) {
-//			if(orders[Direction.UP.ordinal()][floor] == peer.getId()) {
-//				orderBacklog += ;
-//			} 
-//				
-//			if(orders[Direction.DOWN.ordinal()][floor] == peer.getId()){
-//				if(order.floor <)
-//				
-//				orderBacklog += ;
-//			}
-//		}
+		double backlog = 0;
 		
-		for (int direction = 0; direction < 2; direction++) {
-			for (int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++) {
+		boolean rightOrderDirection = order.getDirection() == state.getDirection();
+		boolean[] commands = state.getCommands();
+		
+		for (int floor = 0; floor < Driver.NUMBER_OF_FLOORS; floor++) {
+			boolean isOrderOnTheWay = (state.getFloor() < order.getFloor() && order.getFloor() < floor);
+			
+			for (int direction = 0; direction < 2; direction++) {
 				if(orders[direction][floor] == peer.getId()) {
-					orderBacklog++;
-				}
+					backlog += (rightOrderDirection && isOrderOnTheWay) ? 0.25 : 1.0;
+				} 
+			}
+			
+			if(commands[floor]){
+				backlog += (rightOrderDirection && isOrderOnTheWay) ? 0.25 : 1.0;
 			}
 		}
 		
-		for (boolean internalCommand : state.getCommands()) {
-			if(internalCommand) {
-				orderBacklog++;
-			}
-		}
-		if(orderBacklog == 0) {
+		if(backlog == 0) {
 			return 1.0;
 		}
 		
-		double elevatorDirOppositeOrder = 0;
-		if(state.getFloor() < order.getFloor() && state.getDirection() != Elevator.Direction.UP) {
-			elevatorDirOppositeOrder = 1d;
-		}
-		else if(state.getFloor() > order.getFloor() && state.getDirection() != Elevator.Direction.DOWN) {
-			elevatorDirOppositeOrder = 1d;
-		}
+		boolean wrongDirection = 
+				(state.getFloor() < order.getFloor() && state.getDirection() == Elevator.Direction.DOWN)
+				||
+				(state.getFloor() > order.getFloor() && state.getDirection() == Elevator.Direction.UP);	
 		
-		if(elevatorDirOppositeOrder == 1.0) {
-			return 1.0;
-		}
+		double match = backlog / (Call.values().length * Driver.NUMBER_OF_FLOORS);
 		
-		double numFloorScalingFactor = 1.0 / Driver.NUMBER_OF_FLOORS;
-		
-		return (orderBacklog + elevatorDirOppositeOrder) * numFloorScalingFactor;
+		return (1 - match) / (wrongDirection ? 2.0 : 1.0);
 	}
 	
 	private boolean isMaster() {
@@ -262,7 +247,7 @@ public class Manager {
 	}
 	
 	public synchronized void deleteOrder(long elevId, Order order){
-		Direction dir = order.getDir();
+		Direction dir = order.getDirection();
 		int floor = order.floor;
 		if(orders[dir.ordinal()][floor] == elevId){
 			orders[dir.ordinal()][floor] = NO_ORDER;

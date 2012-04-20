@@ -16,7 +16,7 @@ public class Order implements Serializable {
 		this.floor = floor;
 	}
 
-	public Direction getDir() {
+	public Direction getDirection() {
 		return dir;
 	}
 
