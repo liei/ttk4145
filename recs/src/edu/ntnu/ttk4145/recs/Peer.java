@@ -41,7 +41,7 @@ public class Peer {
 	 */
 	public boolean updateAndEvaluateState(Elevator.State newState) {
 		boolean redistribute = false;
-		if(!state.isStopped() && newState.isStopped()){
+		if(state != null && !state.isStopped() && newState.isStopped()){
 			redistribute = true;
 		}
 		

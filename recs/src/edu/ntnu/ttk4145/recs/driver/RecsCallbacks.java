@@ -1,9 +1,10 @@
 package edu.ntnu.ttk4145.recs.driver;
 
 import edu.ntnu.ttk4145.recs.Elevator;
+import edu.ntnu.ttk4145.recs.driver.Driver.Call;
 import edu.ntnu.ttk4145.recs.manager.Manager;
 
-public class RecsDriver extends Driver {
+public class RecsCallbacks extends DriverCallbacks {
 
 	@Override
 	protected void buttonPressed(Call call, int floor) {
@@ -43,5 +44,4 @@ public class RecsDriver extends Driver {
 		Elevator elev = Elevator.getLocalElevator();
 		elev.setObstructed(enabled);
 	}
-
 }

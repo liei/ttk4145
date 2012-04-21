@@ -2,11 +2,13 @@ package edu.ntnu.ttk4145.recs.driver;
 
 import java.io.IOException;
 
-public class TestDriver extends Driver{
+import edu.ntnu.ttk4145.recs.driver.Driver.Call;
+
+public class TestCallbacks extends DriverCallbacks{
 
 	@Override
 	protected void buttonPressed(Call button, int floor) {
-		setButtonLamp(button,floor,true);
+		Driver.getInstance().setButtonLamp(button,floor,true);
 		System.out.printf("TestDriver.buttonPressed(%s,%d)%n",button,floor);
 	}
 	
@@ -14,34 +16,34 @@ public class TestDriver extends Driver{
 	
 	@Override
 	protected void stopButtonPressed() {
-		setStopLamp(stop = !stop);
+		Driver.getInstance().setStopLamp(stop = !stop);
 		System.out.println("Stop button pushed");
 	}
 	
 	@Override
 	protected void floorSensorTriggered(int floor, boolean arriving) {
-		setFloorIndicator(floor);
+		Driver.getInstance().setFloorIndicator(floor);
 		
 		if(floor == 0){
-			setSpeed(1000);
+			Driver.getInstance().setSpeed(1000);
 		} else if (floor == 3){
-			setSpeed(-1000);
+			Driver.getInstance().setSpeed(-1000);
 		}
 		System.out.printf("Floor %d, %s%n",floor + 1,arriving ? "arrive" : "depart");
 	}
 
 	@Override
 	protected void obstructionSensorTriggered(boolean enabled) {
-		setDoorOpenLamp(enabled);
+		Driver.getInstance().setDoorOpenLamp(enabled);
 		System.out.println("Obstruction switch flipped");
 	}
 	
 	public static void main(String[] args) {
-		Driver driver = Driver.makeInstance(TestDriver.class);
+		Driver driver = Driver.makeInstance(SimulatedDriver.class);
 		driver.resetAllLamps();
-		driver.setSpeed(1000);
+		driver.setSpeed(-1000);
 		
-		driver.startCallbacks();
+		driver.startCallbacks(new TestCallbacks());
 		System.out.println("Started (enter to quit)");
 		try {
 			System.in.read();

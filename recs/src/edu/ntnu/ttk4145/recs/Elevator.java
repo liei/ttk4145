@@ -6,7 +6,8 @@ import java.io.StringWriter;
 
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
-import edu.ntnu.ttk4145.recs.driver.RecsDriver;
+import edu.ntnu.ttk4145.recs.driver.JniDriver;
+import edu.ntnu.ttk4145.recs.driver.RecsCallbacks;
 import edu.ntnu.ttk4145.recs.manager.Manager;
 
 public class Elevator {
@@ -33,7 +34,7 @@ public class Elevator {
 	}
 
 	public void init(){
-		Driver driver = Driver.makeInstance(RecsDriver.class);
+		Driver driver = Driver.getInstance();
 		while(driver.getFloorSensorState() != 0){
 			driver.setSpeed(-1000);
 			try {
@@ -41,7 +42,7 @@ public class Elevator {
 			} catch (InterruptedException e) {}
 		}
 		driver.setSpeed(0);
-		driver.startCallbacks();
+		driver.startCallbacks(new RecsCallbacks());
 	}
 	
 	public long getId() {
@@ -237,9 +238,9 @@ public class Elevator {
 			
 			for(int floor = Driver.NUMBER_OF_FLOORS - 1; floor >= 0; floor--){
 				pw.printf("%d: ",floor+1);
-				pw.printf("%c",orders[Direction.UP.ordinal()][floor] == id ? 'â†‘' : ' ');
-				pw.printf("%c",orders[Direction.DOWN.ordinal()][floor] == id ? 'â†“' : ' ');
-				pw.printf("%c",commands[floor] ? 'â– ' : ' ');
+				pw.printf("%c",orders[Direction.UP.ordinal()][floor] == id ? '†' : ' ');
+				pw.printf("%c",orders[Direction.DOWN.ordinal()][floor] == id ? '†' : ' ');
+				pw.printf("%c",commands[floor] ? '–' : ' ');
 				pw.println();
 			}
 			return sw.toString();

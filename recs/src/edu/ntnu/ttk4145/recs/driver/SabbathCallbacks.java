@@ -1,6 +1,8 @@
 package edu.ntnu.ttk4145.recs.driver;
 
-public class SabbathDriver extends Driver{
+import edu.ntnu.ttk4145.recs.driver.Driver.Call;
+
+public class SabbathCallbacks extends DriverCallbacks{
 
 	public static final int UP   =  250;
 	public static final int DOWN = -250;
@@ -10,25 +12,21 @@ public class SabbathDriver extends Driver{
 		// Do nothing
 	}
 
-	int speed;
-	
-	@Override
-	public void setSpeed(int speed){
-		this.speed = speed;
-		super.setSpeed(speed);
-	}
+	int speed = DOWN;
 	
 	@Override
 	protected void floorSensorTriggered(int floor, boolean arriving) {
+		System.out.printf("floorSensor(%d,%b)%n",floor,arriving);
+		Driver driver = Driver.getInstance();
 		if(arriving){
-			setFloorIndicator(floor);
-			setDoorOpenLamp(true);
-			setSpeed(0);
+			driver.setFloorIndicator(floor);
+			driver.setDoorOpenLamp(true);
+			driver.setSpeed(0);
 			try {
 				//let people in/on
 				Thread.sleep(5000);
 			} catch (InterruptedException e) {}
-			setDoorOpenLamp(false);
+			driver.setDoorOpenLamp(false);
 		}
 		if(floor == Driver.NUMBER_OF_FLOORS - 1){
 			speed = DOWN;
@@ -42,22 +40,26 @@ public class SabbathDriver extends Driver{
 	
 	@Override
 	protected void stopButtonPressed() {
+		System.out.printf("stopButton()%n");
 		stopped = !stopped;
 		updateElevator();
 	}
 
 	@Override
 	protected void obstructionSensorTriggered(boolean enabled) {
+		System.out.printf("obstruction(%b)%n",enabled);
 		stopped = enabled;
 		updateElevator();
 	}
 	
 	private void updateElevator(){
-		setStopLamp(stopped);
-		setSpeed(stopped ? 0 : speed);
+		Driver driver = Driver.getInstance();
+		driver.setStopLamp(stopped);
+		driver.setSpeed(stopped ? 0 : speed);
 	}
 	
 	public static void main(String[] args) {
-		Driver.makeInstance(SabbathDriver.class).startCallbacks().setSpeed(250);
+		Driver.makeInstance(SimulatedDriver.class).startCallbacks(new SabbathCallbacks());
+		Driver.getInstance().setSpeed(-250);
 	}
 }
