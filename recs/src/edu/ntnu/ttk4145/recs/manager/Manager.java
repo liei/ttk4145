@@ -1,6 +1,8 @@
 package edu.ntnu.ttk4145.recs.manager;
 
 import java.net.InetAddress;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -152,7 +154,9 @@ public class Manager {
 	 * @param peer Dead peer.
 	 */
 	public synchronized void redistributeOrders(Peer peer) {
+		System.out.println("Redistribute!");
 		if(!isMaster()){
+			System.out.println("Not master!");
 			return;
 		}
 		for(int dir = 0; dir < orders.length; dir++){
@@ -286,8 +290,18 @@ public class Manager {
 	}
 
 	private synchronized void updatePeers() {
+		List<Peer> deadPeers = new LinkedList<Peer>();
+		System.out.printf("Me %s: %d%n",myId,isMaster() ? "(master)" : "");
 		for(Peer peer : peers.values()){
+			// TODO: Remove debug
+			System.out.println(peer.getState());
 			if(peer.hasTimedOut()){
+				deadPeers.add(peer);
+			}
+		}
+		for(Peer peer : deadPeers){
+			peers.remove(peer.getId());
+			if(isMaster()){
 				redistributeOrders(peer);
 			}
 		}
