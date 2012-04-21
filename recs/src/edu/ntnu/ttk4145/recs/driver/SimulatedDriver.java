@@ -91,6 +91,21 @@ public class SimulatedDriver extends Driver{
 			}
 		};
 		thread.start();
+		
+		JFrame elevWindow = new JFrame();
+		elevWindow.setContentPane(bp);
+		elevWindow.setResizable(true);
+		elevWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		elevWindow.setResizable(false);
+		elevWindow.setVisible(true);
+		elevWindow.pack();
+		
+		JFrame buttonWindow = new JFrame();
+		buttonWindow.setContentPane(sp);
+		buttonWindow.setResizable(true);
+		buttonWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		buttonWindow.pack();
+		buttonWindow.setVisible(true);
 	}
 
 	public void setSpeed(int speed){
@@ -148,26 +163,11 @@ public class SimulatedDriver extends Driver{
 		this.callbacks = callbacks;
 
 		prevf = 0;
-		
-		JFrame elevWindow = new JFrame();
-		elevWindow.setContentPane(bp);
-		elevWindow.setResizable(true);
-		elevWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		elevWindow.setResizable(false);
-		elevWindow.setVisible(true);
-		elevWindow.pack();
-		
-		JFrame buttonWindow = new JFrame();
-		buttonWindow.setContentPane(sp);
-		buttonWindow.setResizable(true);
-		buttonWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		buttonWindow.pack();
-		buttonWindow.setVisible(true);
 	}
 
 	@Override
 	public void stopCallbacks() {
-		// TODO Auto-generated method stub
+		callbacks = DriverCallbacks.NULL;
 	}
 	
 	class ButtonPanel extends JPanel{
@@ -261,7 +261,6 @@ public class SimulatedDriver extends Driver{
 			
 			add(new ElevatorPanel(),gbc);
 			
-			
 			gbc.gridheight = 1;
 			gbc.gridx = 1;
 			for(int y = 0; y < Driver.NUMBER_OF_FLOORS; y++){
@@ -275,15 +274,12 @@ public class SimulatedDriver extends Driver{
 	
 	private class ElevatorPanel extends JPanel{
 
-
 		private static final long serialVersionUID = 1L;
 
 		private static final int X = 8;
 		
 		private BufferedImage bg;
 		private BufferedImage elev;
-		
-		
 		
 		public ElevatorPanel(){
 			try {
