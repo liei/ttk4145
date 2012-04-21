@@ -88,7 +88,7 @@ public class Manager {
 		}
 		peer.updateAliveTime(timeOfLastAlive);
 		//TODO:Remove this.
-		System.out.println("Received alive message from peer: " + peer.getId());
+//		System.out.println("Received alive message from peer: " + peer.getId());
 	}
 	
 	/**
@@ -291,9 +291,10 @@ public class Manager {
 
 	private synchronized void updatePeers() {
 		List<Peer> deadPeers = new LinkedList<Peer>();
-		System.out.printf("Me %s: %d%n",myId,isMaster() ? "(master)" : "");
+		System.out.printf("Me %s: %d%n",isMaster() ? "(master)" : "",myId);
 		for(Peer peer : peers.values()){
 			// TODO: Remove debug
+			System.out.println(peer.getId());
 			System.out.println(peer.getState());
 			if(peer.hasTimedOut()){
 				deadPeers.add(peer);
