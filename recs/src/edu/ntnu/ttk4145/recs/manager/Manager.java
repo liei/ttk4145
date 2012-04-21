@@ -85,6 +85,8 @@ public class Manager {
 			peers.put(peerId, peer);
 		}
 		peer.updateAliveTime(timeOfLastAlive);
+		//TODO:Remove this.
+		System.out.println("Received alive message from peer: " + peer.getId());
 	}
 	
 	/**
