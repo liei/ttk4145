@@ -1,6 +1,7 @@
 package edu.ntnu.ttk4145.recs.manager;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedMap;
@@ -36,7 +37,10 @@ public class Manager {
 		return instance;
 	}
 	
+	
 	private final long myId;
+
+	private Peer local;
 	
 	// orders[Direction.UP.ordinal()][4] == peer.id means there's an order for the elevator to move to
 	// floor 5 to pick up someone who wants to go up.   (..ordinal() = 0)
@@ -47,6 +51,11 @@ public class Manager {
 	
 	private Manager(long id){
 		myId = id;
+		try {
+			local = new Peer(InetAddress.getLocalHost(),myId);
+		} catch (UnknownHostException e) {
+			System.err.println("No localhost? sheeeeet!");
+		}
 		peers = new TreeMap<Long,Peer>();
 	}
 	
@@ -131,10 +140,18 @@ public class Manager {
 	 */
 	public synchronized void registerCall(Call call, int floor) {
 		System.out.printf("registerCall (%s,%d)%n",call,floor);
-		getMaster().sendMessage(new NewOrderMessage(new Order(Direction.values()[call.ordinal()],floor)));
+		Order order = new Order(Direction.values()[call.ordinal()],floor);
+		if(peers.size() == 0){
+			addOrder(order);
+		} else {
+			getMaster().sendMessage(new NewOrderMessage(order));
+		}
 	}
 	
 	private Peer getMaster() {
+		if(peers.size() == 0){
+			return local;
+		}
 		return peers.get(peers.firstKey());
 	}
 
@@ -188,7 +205,7 @@ public class Manager {
 	 * @return The peer best suited to carry out Order.
 	 */
 	private Peer findBestPeerForOrder(Order order){
-		Peer bestPeer = null;
+		Peer bestPeer = local;
 		double bestOm = -1;
 		for(Peer peer : peers.values()) {
 			double om = calculateOrderMatch(peer, order);
@@ -211,7 +228,7 @@ public class Manager {
 	private double calculateOrderMatch(Peer peer, Order order){
 		Elevator.State state = peer.getState();
 		
-		if(state.isObstructed() || state.isStopped()) {
+		if(state == null || state.isObstructed() || state.isStopped()) {
 			return 0.0;
 		}
 		
