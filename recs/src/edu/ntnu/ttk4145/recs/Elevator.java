@@ -6,7 +6,6 @@ import java.io.StringWriter;
 
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
-import edu.ntnu.ttk4145.recs.driver.JniDriver;
 import edu.ntnu.ttk4145.recs.driver.RecsCallbacks;
 import edu.ntnu.ttk4145.recs.manager.Manager;
 
@@ -117,8 +116,6 @@ public class Elevator {
 				
 				long orderId = state.dir != Direction.NONE ? orders[state.dir.ordinal()][state.floor] : 0;
 				
-				System.out.printf("read O(%s,%d) = %n",state.dir,state.floor,orderId);
-				
 				if(orderId == id || state.commands[state.floor]){
 					// Stop at this floor;
 					letPeopleOnOff();
@@ -144,6 +141,7 @@ public class Elevator {
 			public void run() {
 				int wait = DOOR_WAIT_TIME;
 				while(wait-- > 0 || state.obstructed){
+					System.out.println("openDoor:" + Thread.currentThread().getId());
 					try {
 						Thread.sleep(ONE_SECOND);
 					} catch (InterruptedException e) {}
@@ -238,9 +236,9 @@ public class Elevator {
 			
 			for(int floor = Driver.NUMBER_OF_FLOORS - 1; floor >= 0; floor--){
 				pw.printf("%d: ",floor+1);
-				pw.printf("%c",orders[Direction.UP.ordinal()][floor] == id ? '†' : ' ');
-				pw.printf("%c",orders[Direction.DOWN.ordinal()][floor] == id ? '†' : ' ');
-				pw.printf("%c",commands[floor] ? '–' : ' ');
+				pw.printf("%c",orders[Direction.UP.ordinal()][floor] == id ? 'ï¿½' : ' ');
+				pw.printf("%c",orders[Direction.DOWN.ordinal()][floor] == id ? 'ï¿½' : ' ');
+				pw.printf("%c",commands[floor] ? 'ï¿½' : ' ');
 				pw.println();
 			}
 			return sw.toString();

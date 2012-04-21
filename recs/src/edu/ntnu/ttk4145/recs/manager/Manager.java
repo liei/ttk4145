@@ -78,6 +78,8 @@ public class Manager {
 			try {
 				Thread.sleep(Radio.getAliveTimeout());
 			} catch (InterruptedException e) {}
+			local.updateAliveTime(System.currentTimeMillis());
+			Elevator.getLocalElevator().updateElevatorState();
 			updatePeers();
 		}
 	}
@@ -141,11 +143,7 @@ public class Manager {
 	public synchronized void registerCall(Call call, int floor) {
 		System.out.printf("registerCall (%s,%d)%n",call,floor);
 		Order order = new Order(Direction.values()[call.ordinal()],floor);
-		if(peers.size() == 0){
-			addOrder(order);
-		} else {
-			getMaster().sendMessage(new NewOrderMessage(order));
-		}
+		getMaster().sendMessage(new NewOrderMessage(order));
 	}
 	
 	private Peer getMaster() {
@@ -280,8 +278,14 @@ public class Manager {
 
 	private synchronized void updatePeerOrders() {
 		long[][] ordersCopy = Util.copyOf(orders);
-		for(Peer peer : peers.values()){
-			peer.sendMessage(new UpdateOrdersMessage(ordersCopy));
+		
+		
+		if(peers.isEmpty()){
+			local.sendMessage(new UpdateOrdersMessage(ordersCopy));
+		} else {
+			for(Peer peer : peers.values()){
+				peer.sendMessage(new UpdateOrdersMessage(ordersCopy));
+			}
 		}
 	}
 	
