@@ -159,7 +159,7 @@ public class SimulatedDriver extends Driver{
 
 	
 	@Override
-	public void startCallbacks(final DriverCallbacks callbacks) {
+	public void startCallbacks(DriverCallbacks callbacks) {
 		this.callbacks = callbacks;
 
 		prevf = 0;
