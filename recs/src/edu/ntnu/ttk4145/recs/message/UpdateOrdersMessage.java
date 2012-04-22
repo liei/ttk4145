@@ -1,6 +1,6 @@
 package edu.ntnu.ttk4145.recs.message;
 
-import edu.ntnu.ttk4145.recs.manager.Manager;
+import edu.ntnu.ttk4145.recs.elevator.Manager;
 
 public class UpdateOrdersMessage implements Message{
 

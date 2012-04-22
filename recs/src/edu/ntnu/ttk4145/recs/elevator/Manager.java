@@ -1,4 +1,4 @@
-package edu.ntnu.ttk4145.recs.manager;
+package edu.ntnu.ttk4145.recs.elevator;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -7,18 +7,16 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import edu.ntnu.ttk4145.recs.Elevator;
-import edu.ntnu.ttk4145.recs.Elevator.Direction;
-import edu.ntnu.ttk4145.recs.Order;
-import edu.ntnu.ttk4145.recs.Peer;
 import edu.ntnu.ttk4145.recs.Util;
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
+import edu.ntnu.ttk4145.recs.elevator.Elevator.Direction;
 import edu.ntnu.ttk4145.recs.message.MessageListener;
 import edu.ntnu.ttk4145.recs.message.NewOrderMessage;
 import edu.ntnu.ttk4145.recs.message.OrderDoneMessage;
 import edu.ntnu.ttk4145.recs.message.UpdateOrdersMessage;
 import edu.ntnu.ttk4145.recs.message.UpdateStateMessage;
+import edu.ntnu.ttk4145.recs.network.Peer;
 import edu.ntnu.ttk4145.recs.network.Radio;
 
 public class Manager {

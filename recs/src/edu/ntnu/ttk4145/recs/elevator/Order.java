@@ -1,8 +1,8 @@
-package edu.ntnu.ttk4145.recs;
+package edu.ntnu.ttk4145.recs.elevator;
 
 import java.io.Serializable;
 
-import edu.ntnu.ttk4145.recs.Elevator.Direction;
+import edu.ntnu.ttk4145.recs.elevator.Elevator.Direction;
 
 public class Order implements Serializable {
 

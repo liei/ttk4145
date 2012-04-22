@@ -7,7 +7,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 
 import edu.ntnu.ttk4145.recs.Util;
-import edu.ntnu.ttk4145.recs.manager.Manager;
+import edu.ntnu.ttk4145.recs.elevator.Manager;
 /**
  * 
  * The radio class is used to send and receive alive messages.

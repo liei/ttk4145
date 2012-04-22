@@ -1,8 +1,8 @@
 package edu.ntnu.ttk4145.recs.driver;
 
-import edu.ntnu.ttk4145.recs.Elevator;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
-import edu.ntnu.ttk4145.recs.manager.Manager;
+import edu.ntnu.ttk4145.recs.elevator.Elevator;
+import edu.ntnu.ttk4145.recs.elevator.Manager;
 
 public class RecsCallbacks extends DriverCallbacks {
 

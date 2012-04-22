@@ -12,6 +12,7 @@ import java.util.Random;
 public class Util {
 	
 	private static final Random RNG = new Random();
+	private static String niName = null;
 
 	public static int intFromBytes(byte[] bytes){
 		return ByteBuffer.wrap(bytes).getInt();
@@ -30,6 +31,10 @@ public class Util {
 	}
 	
 	public static byte[] getLocalIp() {
+		if(niName != null)
+			return getLocalIp(niName);
+		
+		
 	    byte[] ip = null;
 		try {
 			Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
@@ -83,5 +88,9 @@ public class Util {
 			c[i] = Arrays.copyOf(m[i], m[i].length);
 		}
 		return c;
+	}
+
+	public static void setNI(String niName) {
+		Util.niName  = niName;
 	}
 }

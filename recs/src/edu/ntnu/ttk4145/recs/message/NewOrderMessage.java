@@ -1,7 +1,7 @@
 package edu.ntnu.ttk4145.recs.message;
 
-import edu.ntnu.ttk4145.recs.Order;
-import edu.ntnu.ttk4145.recs.manager.Manager;
+import edu.ntnu.ttk4145.recs.elevator.Manager;
+import edu.ntnu.ttk4145.recs.elevator.Order;
 
 public class NewOrderMessage implements Message {
 

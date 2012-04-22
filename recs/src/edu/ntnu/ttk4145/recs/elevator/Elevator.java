@@ -1,4 +1,4 @@
-package edu.ntnu.ttk4145.recs;
+package edu.ntnu.ttk4145.recs.elevator;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -6,8 +6,6 @@ import java.io.StringWriter;
 
 import edu.ntnu.ttk4145.recs.driver.Driver;
 import edu.ntnu.ttk4145.recs.driver.Driver.Call;
-import edu.ntnu.ttk4145.recs.driver.RecsCallbacks;
-import edu.ntnu.ttk4145.recs.manager.Manager;
 
 public class Elevator {
 
@@ -41,7 +39,7 @@ public class Elevator {
 			} catch (InterruptedException e) {}
 		}
 		driver.setSpeed(0);
-		driver.startCallbacks(new RecsCallbacks());
+		setFloor(0,true);
 	}
 	
 	public long getId() {
@@ -236,9 +234,9 @@ public class Elevator {
 			
 			for(int floor = Driver.NUMBER_OF_FLOORS - 1; floor >= 0; floor--){
 				pw.printf("%d: ",floor+1);
-				pw.printf("%c",orders[Direction.UP.ordinal()][floor] == id ? '�' : ' ');
-				pw.printf("%c",orders[Direction.DOWN.ordinal()][floor] == id ? '�' : ' ');
-				pw.printf("%c",commands[floor] ? '�' : ' ');
+				pw.printf("%S",orders[Direction.UP.ordinal()][floor] == id ? 'U' : ' ');
+				pw.printf("%S",orders[Direction.DOWN.ordinal()][floor] == id ? 'D' : ' ');
+				pw.printf("%c",commands[floor] ? 'S' : ' ');
 				pw.println();
 			}
 			return sw.toString();

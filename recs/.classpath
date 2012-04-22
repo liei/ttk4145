@@ -11,5 +11,10 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/recs/lib/guava-10.0.1-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/commons-cli-1.2.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/recs/lib/commons-cli-1.2-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
