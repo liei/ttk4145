@@ -7,7 +7,6 @@ import java.net.Socket;
 
 import edu.ntnu.ttk4145.recs.elevator.Elevator;
 import edu.ntnu.ttk4145.recs.elevator.Manager;
-import edu.ntnu.ttk4145.recs.elevator.Elevator.State;
 import edu.ntnu.ttk4145.recs.message.Message;
 
 public class Peer {
