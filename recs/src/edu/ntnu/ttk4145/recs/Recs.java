@@ -1,5 +1,6 @@
 package edu.ntnu.ttk4145.recs;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -25,10 +26,11 @@ public class Recs {
 	private static final String USAGE = "java -jar recs.jar [-sfq] [-i <ni>]";
 	
 	static {
+		System.setProperty("java.library.path",new File("jni").getAbsolutePath());
 		options.addOption("s","simulation",false,"Run simulated elevator")
 				.addOption("f","sabbath",false,"Run in sabbath mode")
 				.addOption("q","quiet",false,"Don't print anything")
-				.addOption("i","interface",true,"What network interface to use.")
+				.addOption("i","interface",true,"What network interface to use")
 				.addOption("?",false,"Don't print anything")
 				.addOption("h","help",false,"Don't print anything");
 	}
@@ -68,7 +70,7 @@ public class Recs {
 			System.setOut(nullPs);
 			System.setErr(nullPs);
 		}
-		
+
 		Driver driver = Driver.makeInstance(cl.hasOption('s') ? SimulatedDriver.class : JniDriver.class);
 		Elevator.getLocalElevator().init();
 		driver.startCallbacks(cl.hasOption('f') ? new SabbathCallbacks() : new RecsCallbacks());

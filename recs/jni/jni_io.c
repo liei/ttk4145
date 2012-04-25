@@ -2,11 +2,11 @@
 #include <comedilib.h>
 #include "jni_io.h"
 
-#define PORT0 edu_ntnu_ttk4145_recs_driver_Driver_PORT0
-#define PORT1 edu_ntnu_ttk4145_recs_driver_Driver_PORT1
-#define PORT2 edu_ntnu_ttk4145_recs_driver_Driver_PORT2
-#define PORT3 edu_ntnu_ttk4145_recs_driver_Driver_PORT3
-#define PORT4 edu_ntnu_ttk4145_recs_driver_Driver_PORT4
+#define PORT0 edu_ntnu_ttk4145_recs_driver_JniDriver_PORT0
+#define PORT1 edu_ntnu_ttk4145_recs_driver_JniDriver_PORT1
+#define PORT2 edu_ntnu_ttk4145_recs_driver_JniDriver_PORT2
+#define PORT3 edu_ntnu_ttk4145_recs_driver_JniDriver_PORT3
+#define PORT4 edu_ntnu_ttk4145_recs_driver_JniDriver_PORT4
 
 
 static comedi_t *it_g = NULL;
@@ -17,7 +17,7 @@ static comedi_t *it_g = NULL;
  * Signature: ()I
  */
 JNIEXPORT jint JNICALL 
-Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1init
+Java_edu_ntnu_ttk4145_recs_driver_JniDriver_io_1init
 (JNIEnv *env, jobject this){
   int i, status = 0;
 
@@ -43,7 +43,7 @@ Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1init
  * Signature: ()I
  */
 JNIEXPORT jint JNICALL 
-Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1close
+Java_edu_ntnu_ttk4145_recs_driver_JniDriver_io_1close
 (JNIEnv *env, jobject this){
   return comedi_close(it_g);
 }
@@ -55,7 +55,7 @@ Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1close
  * Signature: (I)I
  */
 JNIEXPORT jint JNICALL 
-Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1read_1bit
+Java_edu_ntnu_ttk4145_recs_driver_JniDriver_io_1read_1bit
 (JNIEnv *env, jobject this, jint channel){
   unsigned int data = 0;
   comedi_dio_read(it_g, channel>>8, channel&0xff, &data);
@@ -69,7 +69,7 @@ Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1read_1bit
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL 
-Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1set_1bit
+Java_edu_ntnu_ttk4145_recs_driver_JniDriver_io_1set_1bit
 (JNIEnv *env, jobject this, jint channel){
   comedi_dio_write(it_g, channel>>8,channel&0xff, 1);
 }
@@ -80,7 +80,7 @@ Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1set_1bit
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL 
-Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1clear_1bit
+Java_edu_ntnu_ttk4145_recs_driver_JniDriver_io_1clear_1bit
 (JNIEnv *env, jobject this, jint channel){
   comedi_dio_write(it_g, channel>>8,channel&0xff, 0);
 }
@@ -91,7 +91,7 @@ Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1clear_1bit
  * Signature: (I)I
  */
 JNIEXPORT jint JNICALL 
-Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1read_1analog
+Java_edu_ntnu_ttk4145_recs_driver_JniDriver_io_1read_1analog
 (JNIEnv *env, jobject this, jint channel){
   lsampl_t data = 0;
   comedi_data_read(it_g, channel>>8, channel&0xff, 0, AREF_GROUND, &data);
@@ -105,7 +105,7 @@ Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1read_1analog
  * Signature: (II)V
  */
 JNIEXPORT void JNICALL 
-Java_edu_ntnu_ttk4145_recs_driver_Driver_io_1write_1analog
+Java_edu_ntnu_ttk4145_recs_driver_JniDriver_io_1write_1analog
 (JNIEnv *env, jobject this, jint channel, jint data){
   comedi_data_write(it_g, channel>>8, channel&0xff, 0, AREF_GROUND, data);
 }

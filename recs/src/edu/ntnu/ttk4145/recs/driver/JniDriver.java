@@ -1,5 +1,6 @@
 package edu.ntnu.ttk4145.recs.driver;
 
+
 public class JniDriver extends Driver{
 	
 	public static final int NUMBER_OF_FLOORS = 4;
