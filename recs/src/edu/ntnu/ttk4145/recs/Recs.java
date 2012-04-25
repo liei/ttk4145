@@ -1,6 +1,5 @@
 package edu.ntnu.ttk4145.recs;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -26,7 +25,6 @@ public class Recs {
 	private static final String USAGE = "java -jar recs.jar [-sfq] [-i <ni>]";
 	
 	static {
-		System.setProperty("java.library.path",new File("jni").getAbsolutePath());
 		options.addOption("s","simulation",false,"Run simulated elevator")
 				.addOption("f","sabbath",false,"Run in sabbath mode")
 				.addOption("q","quiet",false,"Don't print anything")
